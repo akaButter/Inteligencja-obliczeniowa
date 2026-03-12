@@ -5,14 +5,14 @@
 ## EasyAI
 
 ### kod gry:
- - dodac wersję probablistyczną
- - dodać mierzenie czsu ruchu
+ - dodac wersję probablistyczną +-
+ - dodać mierzenie czasu ruchu +
  - zbieranie danych do jakiegoś pliku
 
 ### algorytmy rozwiązywania:
- - negamax                                - jest w easyAI
- - negamax + odcięcie alfa-beta           - jest w easyAI
- - expecti minimax z odcięciem alfa-beta  - trzeba napisać samemu
+ - negamax                                - jest w easyAI - trzeba dodać + 
+ - negamax + odcięcie alfa-beta           - jest w easyAI +
+ - expecti minimax z odcięciem alfa-beta  - trzeba napisać samemu +-
 
 ### raport i analizy:
  - probabilistyczna wersja vs determiniztyczna
