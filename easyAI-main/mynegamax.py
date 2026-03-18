@@ -89,12 +89,11 @@ def negamax(game, depth, origDepth, scoring, alpha=+inf, beta=-inf, tt=None, pru
         if bestValue < move_alpha:
             bestValue = move_alpha
             best_move = move
+            if depth == origDepth:
+                state.ai_move = move
 
         if alpha < move_alpha and pruning:
             alpha = move_alpha
-            # best_move = move
-            if depth == origDepth:
-                state.ai_move = move
             if alpha >= beta:
                 break
 

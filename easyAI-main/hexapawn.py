@@ -1,5 +1,7 @@
 from easyAI import TwoPlayerGame
 import random
+
+
 # Convert D7 to (3,6) and back...
 to_string = lambda move: " ".join(
     ["ABCDEFGHIJ"[move[i][0]] + str(move[i][1] + 1) for i in (0, 1)]
@@ -9,7 +11,7 @@ to_tuple = lambda s: ("ABCDEFGHIJ".index(s[0]), int(s[1:]) - 1)
 
 class Hexapawn(TwoPlayerGame):
 
-    def __init__(self, players, size=(4, 4), chance = 0.1):
+    def __init__(self, players, size=(4, 4), chance=0.1):
         self.chance = chance
         self.size = M, N = size
         p = [[(i, j) for j in range(N)] for i in [0, M - 1]]
@@ -20,7 +22,6 @@ class Hexapawn(TwoPlayerGame):
             players[i].pawns = [(p, p) for p in pawns]
 
             players[i].lost_pawns = []
-            print(pawns)
         self.players = players
         self.current_player = 1
         self.history = []
