@@ -1,8 +1,18 @@
 # Inteligencja-obliczeniowa
 
 # TODO:
+## aiPython
 
-## EasyAI
+### problemy w 1 linku - examples, 
+### aipython
+* strips - akcja
+* STRIPS_domain - opis przestrzeni (cecha i wartości cechy) i akcje
+
+Wybranie dziedziny - conajmniej 50 stanów, jak nie ma to rozszerzyć dziedzine
+
+
+# DONE:
+## EasyAI 
 
 ### kod gry:
  - dodac wersję probablistyczną +-
