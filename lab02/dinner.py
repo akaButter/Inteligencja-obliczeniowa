@@ -1,0 +1,1 @@
+# https://github.com/primaryobjects/strips/tree/master/examples/dinner
