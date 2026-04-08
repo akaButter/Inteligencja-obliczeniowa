@@ -10,8 +10,15 @@ Problem: Prepare a dinner with multiple guests
 - Table must be set
 - Guests must be invited
 """
+import sys
+import os
 
-from aipython_strips import Strips, STRIPS_domain, Planning_problem
+current_dir = os.path.dirname(os.path.abspath(__file__))
+aipython_dir = os.path.join(current_dir, '..', 'aipython')
+
+sys.path.append(aipython_dir)
+
+from stripsProblem import Strips, STRIPS_domain, Planning_problem
 
 # ==================================================================================
 # DINNER DOMAIN DEFINITION

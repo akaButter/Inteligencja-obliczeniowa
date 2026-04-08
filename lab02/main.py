@@ -1,20 +1,4 @@
-"""
-MAIN SOLVER - STRIPS Planning with Three Domains
-=================================================
-
-Project: STRIPS Planning Problem Solving (4, 6, 8 point tasks)
-Domains: Dinner, Magicworld, Blocksword
-
-Features:
-- Forward planning without heuristics (BFS)
-- Forward planning with domain-specific heuristics (A*)
-- Planning with subgoals
-- Comprehensive timing and statistics
-"""
-
-import sys
 import time
-from copy import deepcopy
 
 # Import standalone STRIPS framework
 from aipython_strips import (forward_planner_bfs, forward_planner_astar,

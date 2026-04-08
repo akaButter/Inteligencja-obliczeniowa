@@ -10,8 +10,15 @@ Problem: Achieve magical transformation through spells and potions
 - Break/dispel existing magic
 - Create enchanted items
 """
+import sys
+import os
 
-from aipython_strips import Strips, STRIPS_domain, Planning_problem
+current_dir = os.path.dirname(os.path.abspath(__file__))
+aipython_dir = os.path.join(current_dir, '..', 'aipython')
+
+sys.path.append(aipython_dir)
+
+from stripsProblem import Strips, STRIPS_domain, Planning_problem
 
 # ==================================================================================
 # MAGICWORLD DOMAIN DEFINITION
