@@ -8,15 +8,8 @@ Problem: Arrange blocks on tables by moving them
 - Only the topmost block can be moved
 - Complex multi-goal arrangement problems
 """
-import sys
-import os
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-aipython_dir = os.path.join(current_dir, '..', 'aipython')
-
-sys.path.append(aipython_dir)
-
-from stripsProblem import Strips, STRIPS_domain, Planning_problem
+from aipython_strips import Strips, STRIPS_domain, Planning_problem
 
 # ==================================================================================
 # BLOCKSWORD DOMAIN DEFINITION
