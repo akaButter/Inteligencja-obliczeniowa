@@ -42,7 +42,7 @@ def solve_problem_bfs(problem, problem_name, timeout=120):
         actions, elapsed, expanded = forward_planner_bfs(problem, timeout)
 
         if actions is not None:
-            print(f"  ✓ Found solution: {len(actions)} steps in {elapsed:.4f}s")
+            print(f"    Found solution: {len(actions)} steps in {elapsed:.4f}s")
             print(f"    Actions: {', '.join([str(a) for a in actions[:5]])}" +
                   ("..." if len(actions) > 5 else ""))
 
@@ -54,7 +54,7 @@ def solve_problem_bfs(problem, problem_name, timeout=120):
                 'expanded': expanded,
             }
         else:
-            print(f"  ✗ No solution found (timeout after {elapsed:.2f}s)")
+            print(f"    No solution found (timeout after {elapsed:.2f}s)")
             return {
                 'status': 'timeout' if elapsed >= timeout else 'no_solution',
                 'time': elapsed,
@@ -63,7 +63,7 @@ def solve_problem_bfs(problem, problem_name, timeout=120):
 
     except Exception as e:
         elapsed = time.time() - start_time
-        print(f"  ✗ Error: {str(e)[:100]}")
+        print(f"    Error: {str(e)[:100]}")
         return {
             'status': 'error',
             'error': str(e)[:200],
@@ -80,7 +80,7 @@ def solve_problem_astar(problem, heuristic, problem_name, timeout=120):
         actions, elapsed, expanded = forward_planner_astar(problem, heuristic, timeout)
 
         if actions is not None:
-            print(f"  ✓ Found solution: {len(actions)} steps in {elapsed:.4f}s")
+            print(f"    Found solution: {len(actions)} steps in {elapsed:.4f}s")
             print(f"    Actions: {', '.join([str(a) for a in actions[:5]])}" +
                   ("..." if len(actions) > 5 else ""))
 
@@ -92,7 +92,7 @@ def solve_problem_astar(problem, heuristic, problem_name, timeout=120):
                 'expanded': expanded,
             }
         else:
-            print(f"  ✗ No solution found (timeout after {elapsed:.2f}s)")
+            print(f"    No solution found (timeout after {elapsed:.2f}s)")
             return {
                 'status': 'timeout' if elapsed >= timeout else 'no_solution',
                 'time': elapsed,
@@ -101,7 +101,7 @@ def solve_problem_astar(problem, heuristic, problem_name, timeout=120):
 
     except Exception as e:
         elapsed = time.time() - start_time
-        print(f"  ✗ Error: {str(e)[:100]}")
+        print(f"    Error: {str(e)[:100]}")
         return {
             'status': 'error',
             'error': str(e)[:200],
@@ -119,7 +119,7 @@ def solve_problem_with_subgoals(problem, heuristic, subgoals, problem_name, time
         )
 
         if actions is not None:
-            print(f"  ✓ All subgoals achieved: {len(actions)} total steps in {elapsed:.4f}s")
+            print(f"    All subgoals achieved: {len(actions)} total steps in {elapsed:.4f}s")
 
             return {
                 'status': 'success',
@@ -128,14 +128,14 @@ def solve_problem_with_subgoals(problem, heuristic, subgoals, problem_name, time
                 'time': elapsed,
             }
         else:
-            print(f"  ✗ Failed to achieve all subgoals (time: {elapsed:.2f}s)")
+            print(f"    Failed to achieve all subgoals (time: {elapsed:.2f}s)")
             return {
                 'status': 'failed' if elapsed < timeout else 'timeout',
                 'time': elapsed,
             }
 
     except Exception as e:
-        print(f"  ✗ Error: {str(e)[:100]}")
+        print(f"    Error: {str(e)[:100]}")
         return {
             'status': 'error',
             'error': str(e)[:200],
@@ -364,6 +364,3 @@ if __name__ == '__main__':
     results = main()
     print_performance_analysis(results)
 
-    print("\n" + "="*90)
-    print("✓ Wykonanie zakończone pomyślnie!".ljust(90))
-    print("="*90 + "\n")
