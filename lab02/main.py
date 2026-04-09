@@ -3,7 +3,7 @@ import time
 # Import standalone STRIPS framework
 from aipython_strips import (forward_planner_bfs, forward_planner_astar,
                              forward_planner_astar_subgoals,
-                             heuristic_unsatisfied_goals)
+                             heuristic_unsatisfied_goals, forward_planner_subgoals)
 
 # Import problem domains
 from dinner import (dinner_problem_1, dinner_problem_2, dinner_problem_3,
@@ -17,7 +17,7 @@ from blocksword4 import (blocksword_problem_1, blocksword_problem_2, blocksword_
 # UTILITIES
 # ==================================================================================
 
-def solve_problem_bfs(problem, problem_name, timeout=120):
+def solve_problem_bfs(problem, problem_name, timeout=300):
     """Solve problem using BFS (no heuristic)"""
     print(f"\n[BFS] Solving: {problem_name}")
     start_time = time.time()
@@ -27,8 +27,7 @@ def solve_problem_bfs(problem, problem_name, timeout=120):
 
         if actions is not None:
             print(f"    Found solution: {len(actions)} steps in {elapsed:.4f}s")
-            print(f"    Actions: {', '.join([str(a) for a in actions[:5]])}" +
-                  ("..." if len(actions) > 5 else ""))
+            print(f"    Actions: {', '.join([str(a) for a in actions])}")
 
             return {
                 'status': 'success',
@@ -55,7 +54,7 @@ def solve_problem_bfs(problem, problem_name, timeout=120):
         }
 
 
-def solve_problem_astar(problem, heuristic, problem_name, timeout=120):
+def solve_problem_astar(problem, heuristic, problem_name, timeout=300):
     """Solve problem using A* with heuristic"""
     print(f"[A*]  Solving: {problem_name} (with heuristic)")
     start_time = time.time()
@@ -65,8 +64,7 @@ def solve_problem_astar(problem, heuristic, problem_name, timeout=120):
 
         if actions is not None:
             print(f"    Found solution: {len(actions)} steps in {elapsed:.4f}s")
-            print(f"    Actions: {', '.join([str(a) for a in actions[:5]])}" +
-                  ("..." if len(actions) > 5 else ""))
+            print(f"    Actions: {', '.join([str(a) for a in actions])}")
 
             return {
                 'status': 'success',
@@ -93,7 +91,7 @@ def solve_problem_astar(problem, heuristic, problem_name, timeout=120):
         }
 
 
-def solve_problem_with_subgoals(problem, heuristic, subgoals, problem_name, timeout=120):
+def solve_problem_with_subgoals_astar(problem, heuristic, subgoals, problem_name, timeout=300):
     """Solve problem using A* with subgoals"""
     print(f"[A*+SG] Solving: {problem_name} (with {len(subgoals)} subgoals)")
 
@@ -125,7 +123,37 @@ def solve_problem_with_subgoals(problem, heuristic, subgoals, problem_name, time
             'error': str(e)[:200],
         }
 
+def solve_problem_with_subgoals(problem, subgoals, problem_name, timeout=300):
+    """Solve problem with subgoals"""
+    print(f"[BFS+SG] Solving: {problem_name} (with {len(subgoals)} subgoals)")
 
+    try:
+        actions, elapsed, steps = forward_planner_subgoals(
+            problem, subgoals, timeout
+        )
+
+        if actions is not None:
+            print(f"    All subgoals achieved: {len(actions)} total steps in {elapsed:.4f}s")
+
+            return {
+                'status': 'success',
+                'solution': [str(a) for a in actions],
+                'steps': len(actions),
+                'time': elapsed,
+            }
+        else:
+            print(f"    Failed to achieve all subgoals (time: {elapsed:.2f}s)")
+            return {
+                'status': 'failed' if elapsed < timeout else 'timeout',
+                'time': elapsed,
+            }
+
+    except Exception as e:
+        print(f"    Error: {str(e)[:100]}")
+        return {
+            'status': 'error',
+            'error': str(e)[:200],
+        }
 # ==================================================================================
 # MAIN RUNNER
 # ==================================================================================
@@ -167,11 +195,11 @@ def main():
         }
 
         # BFS
-        bfs_result = solve_problem_bfs(problem, name, timeout=60)
+        bfs_result = solve_problem_bfs(problem, name, timeout=300)
         result['bfs'] = bfs_result
 
         # A* with heuristic
-        astar_result = solve_problem_astar(problem, heuristic, name, timeout=60)
+        astar_result = solve_problem_astar(problem, heuristic, name, timeout=300)
         result['astar'] = astar_result
 
         results['dinner'].append(result)
@@ -197,10 +225,10 @@ def main():
             'goal_facts': len(problem.goal),
         }
 
-        bfs_result = solve_problem_bfs(problem, name, timeout=60)
+        bfs_result = solve_problem_bfs(problem, name, timeout=300)
         result['bfs'] = bfs_result
 
-        astar_result = solve_problem_astar(problem, heuristic, name, timeout=60)
+        astar_result = solve_problem_astar(problem, heuristic, name, timeout=300)
         result['astar'] = astar_result
 
         results['magicworld'].append(result)
@@ -226,10 +254,10 @@ def main():
             'goal_facts': len(problem.goal),
         }
 
-        bfs_result = solve_problem_bfs(problem, name, timeout=60)
+        bfs_result = solve_problem_bfs(problem, name, timeout=300)
         result['bfs'] = bfs_result
 
-        astar_result = solve_problem_astar(problem, heuristic, name, timeout=60)
+        astar_result = solve_problem_astar(problem, heuristic, name, timeout=300)
         result['astar'] = astar_result
 
         results['blocksword'].append(result)
@@ -248,36 +276,45 @@ def main():
         key = f'dinner_{idx+1}'
         if key in dinner_subgoals_dict:
             print(f"\n--- {name}_subgoals ---")
-            result = solve_problem_with_subgoals(
-                problem, heuristic, dinner_subgoals_dict[key], name, timeout=120
+            result2 = solve_problem_with_subgoals_astar(
+                problem, heuristic, dinner_subgoals_dict[key], name, timeout=300
             )
-            result['name'] = name + '_subgoals'
-            result['domain'] = 'dinner'
-            results['subgoals'].append(result)
+            result1 = solve_problem_with_subgoals(
+                problem, dinner_subgoals_dict[key], name, timeout=300
+            )
+            result1['name'] = name + '_subgoals'
+            result1['domain'] = 'dinner'
+            results['subgoals'].append([result1, result2])
 
     # Magicworld with subgoals
     for idx, (name, problem, heuristic) in enumerate(magic_problems):
         key = f'magicworld_{idx+1}'
         if key in magic_subgoals_dict:
             print(f"\n--- {name}_subgoals ---")
-            result = solve_problem_with_subgoals(
-                problem, heuristic, magic_subgoals_dict[key], name, timeout=120
+            result2 = solve_problem_with_subgoals_astar(
+                problem, heuristic, magic_subgoals_dict[key], name, timeout=300
             )
-            result['name'] = name + '_subgoals'
-            result['domain'] = 'magicworld'
-            results['subgoals'].append(result)
+            result1 = solve_problem_with_subgoals(
+                problem, magic_subgoals_dict[key], name, timeout=300
+            )
+            result1['name'] = name + '_subgoals'
+            result1['domain'] = 'magicworld'
+            results['subgoals'].append([result1, result2])
 
     # Blocksword with subgoals
     for idx, (name, problem, heuristic) in enumerate(blocks_problems):
         key = f'blocksword_{idx+1}'
         if key in blocks_subgoals_dict:
             print(f"\n--- {name}_subgoals ---")
-            result = solve_problem_with_subgoals(
-                problem, heuristic, blocks_subgoals_dict[key], name, timeout=120
+            result2 = solve_problem_with_subgoals_astar(
+                problem, heuristic, blocks_subgoals_dict[key], name, timeout=300
             )
-            result['name'] = name + '_subgoals'
-            result['domain'] = 'blocksword'
-            results['subgoals'].append(result)
+            result1 = solve_problem_with_subgoals(
+                problem, blocks_subgoals_dict[key], name, timeout=300
+            )
+            result1['name'] = name + '_subgoals'
+            result1['domain'] = 'blocksword'
+            results['subgoals'].append([result1, result2])
 
     # ========== SUMMARY ==========
     print("\n" + "="*90)
@@ -308,15 +345,17 @@ def print_summary(results):
                   f"{bfs_time:>10} | {astar_time:>10}")
 
     print("\n[6-POINT TASKS] Problems with Subgoals")
-    print("-" * 70)
-    print(f"{'Problem':30} | {'Steps':8} | {'Time':10}")
-    print("-" * 70)
+    print("-" * 100)
+    print(f"{'Problem':30} | {'Steps BFS':8} | {'Time BFS':10} | {'Steps A*':8} | {'Time A*':10}")
+    print("-" * 100)
 
     for r in results['subgoals']:
-        if r['status'] == 'success':
-            print(f"{r['name']:30} | {r['steps']:8} | {r['time']:8.4f}s")
-        else:
-            print(f"{r['name']:30} | {r['status']:8}")
+        bfs_steps = f"{r[0]['steps']}" if r[0]['status'] == 'success' else r[0]['status']
+        bfs_time = f"{r[0]['time']:.4f}s" if r[0]['status'] == 'success' else "-"
+        astar_steps = f"{r[1]['steps']}" if r[1]['status'] == 'success' else r[1]['status']
+        astar_time = f"{r[1]['time']:.4f}s" if r[1]['status'] == 'success' else "-"
+
+        print(f"{r[0]['name']:30} | {bfs_steps:>8} | {bfs_time:>10} | {astar_steps:>8} | {astar_time:>10}")
 
 
 # Performance metrics

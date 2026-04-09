@@ -209,6 +209,44 @@ def forward_planner_astar_subgoals(problem, heuristic, subgoals, timeout=120):
     elapsed = time.time() - start_time
     return all_actions, elapsed, len(all_actions)
 
+def forward_planner_subgoals(problem, subgoals, timeout=120):
+    """
+    Forward planning with A* through series of subgoals
+    subgoals: list of dict (intermediate goal states)
+    """
+    start_time = time.time()
+    current_state_dict = dict(problem.initial_state)
+    all_actions = []
+
+    # Add final goal to subgoals
+    goals_sequence = list(subgoals) + [problem.goal]
+
+    for subgoal_idx, subgoal in enumerate(goals_sequence):
+        remaining_time = timeout - (time.time() - start_time)
+        if remaining_time <= 0:
+            return None, time.time() - start_time, -1
+
+        # Create temporary problem
+        temp_problem = Planning_problem(
+            problem.prob_domain,
+            current_state_dict,
+            subgoal
+        )
+
+        # Solve
+        actions, _, _ = forward_planner_bfs(temp_problem, remaining_time)
+
+        if actions is None:
+            return None, time.time() - start_time, -1
+
+        all_actions.extend(actions)
+
+        # Update current state for next subgoal
+        for action in actions:
+            current_state_dict.update(action.effects)
+
+    elapsed = time.time() - start_time
+    return all_actions, elapsed, len(all_actions)
 
 # ==================================================================================
 # HEURISTIC FUNCTIONS
