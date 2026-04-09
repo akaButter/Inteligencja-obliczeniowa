@@ -346,7 +346,7 @@ def get_magicworld_subgoals():
     return {
         'magicworld_1': [
             {'have_phoenix_feather': True, 'have_herbs': True},
-            {'brewed_invisibility_potion': True, 'cast_freeze': True},
+            {'brewed_invisibility_potion': True, 'cast_freeze': True}
         ],
         'magicworld_2': [
             {'have_phoenix_feather': True, 'have_herbs': True,
@@ -355,11 +355,12 @@ def get_magicworld_subgoals():
             {'cast_fireball': True, 'cast_freeze': True},
         ],
         'magicworld_3': [
-            {'mana': 100},
             {'player_level': 'master'},
+            {'mana': 100},
             {'ritual_prepared': True,
              'brewed_transformation_potion': True,
              'brewed_healing_potion': True},
+            {'cast_fireball': True, 'cast_freeze': True},
         ],
     }
 

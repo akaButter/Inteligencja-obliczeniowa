@@ -17,7 +17,7 @@ from blocksword4 import (blocksword_problem_1, blocksword_problem_2, blocksword_
 # UTILITIES
 # ==================================================================================
 
-def solve_problem_bfs(problem, problem_name, timeout=300):
+def solve_problem_bfs(problem, problem_name, timeout=180):
     """Solve problem using BFS (no heuristic)"""
     print(f"\n[BFS] Solving: {problem_name}")
     start_time = time.time()
@@ -54,7 +54,7 @@ def solve_problem_bfs(problem, problem_name, timeout=300):
         }
 
 
-def solve_problem_astar(problem, heuristic, problem_name, timeout=300):
+def solve_problem_astar(problem, heuristic, problem_name, timeout=180):
     """Solve problem using A* with heuristic"""
     print(f"[A*]  Solving: {problem_name} (with heuristic)")
     start_time = time.time()
@@ -91,7 +91,7 @@ def solve_problem_astar(problem, heuristic, problem_name, timeout=300):
         }
 
 
-def solve_problem_with_subgoals_astar(problem, heuristic, subgoals, problem_name, timeout=300):
+def solve_problem_with_subgoals_astar(problem, heuristic, subgoals, problem_name, timeout=180):
     """Solve problem using A* with subgoals"""
     print(f"[A*+SG] Solving: {problem_name} (with {len(subgoals)} subgoals)")
 
@@ -123,7 +123,7 @@ def solve_problem_with_subgoals_astar(problem, heuristic, subgoals, problem_name
             'error': str(e)[:200],
         }
 
-def solve_problem_with_subgoals(problem, subgoals, problem_name, timeout=300):
+def solve_problem_with_subgoals(problem, subgoals, problem_name, timeout=180):
     """Solve problem with subgoals"""
     print(f"[BFS+SG] Solving: {problem_name} (with {len(subgoals)} subgoals)")
 
@@ -195,11 +195,11 @@ def main():
         }
 
         # BFS
-        bfs_result = solve_problem_bfs(problem, name, timeout=300)
+        bfs_result = solve_problem_bfs(problem, name, timeout=180)
         result['bfs'] = bfs_result
 
         # A* with heuristic
-        astar_result = solve_problem_astar(problem, heuristic, name, timeout=300)
+        astar_result = solve_problem_astar(problem, heuristic, name, timeout=180)
         result['astar'] = astar_result
 
         results['dinner'].append(result)
@@ -225,10 +225,10 @@ def main():
             'goal_facts': len(problem.goal),
         }
 
-        bfs_result = solve_problem_bfs(problem, name, timeout=300)
+        bfs_result = solve_problem_bfs(problem, name, timeout=180)
         result['bfs'] = bfs_result
 
-        astar_result = solve_problem_astar(problem, heuristic, name, timeout=300)
+        astar_result = solve_problem_astar(problem, heuristic, name, timeout=180)
         result['astar'] = astar_result
 
         results['magicworld'].append(result)
@@ -254,10 +254,10 @@ def main():
             'goal_facts': len(problem.goal),
         }
 
-        bfs_result = solve_problem_bfs(problem, name, timeout=300)
+        bfs_result = solve_problem_bfs(problem, name, timeout=180)
         result['bfs'] = bfs_result
 
-        astar_result = solve_problem_astar(problem, heuristic, name, timeout=300)
+        astar_result = solve_problem_astar(problem, heuristic, name, timeout=180)
         result['astar'] = astar_result
 
         results['blocksword'].append(result)
@@ -277,10 +277,10 @@ def main():
         if key in dinner_subgoals_dict:
             print(f"\n--- {name}_subgoals ---")
             result2 = solve_problem_with_subgoals_astar(
-                problem, heuristic, dinner_subgoals_dict[key], name, timeout=300
+                problem, heuristic, dinner_subgoals_dict[key], name, timeout=180
             )
             result1 = solve_problem_with_subgoals(
-                problem, dinner_subgoals_dict[key], name, timeout=300
+                problem, dinner_subgoals_dict[key], name, timeout=180
             )
             result1['name'] = name + '_subgoals'
             result1['domain'] = 'dinner'
@@ -292,10 +292,10 @@ def main():
         if key in magic_subgoals_dict:
             print(f"\n--- {name}_subgoals ---")
             result2 = solve_problem_with_subgoals_astar(
-                problem, heuristic, magic_subgoals_dict[key], name, timeout=300
+                problem, heuristic, magic_subgoals_dict[key], name, timeout=180
             )
             result1 = solve_problem_with_subgoals(
-                problem, magic_subgoals_dict[key], name, timeout=300
+                problem, magic_subgoals_dict[key], name, timeout=180
             )
             result1['name'] = name + '_subgoals'
             result1['domain'] = 'magicworld'
@@ -307,10 +307,10 @@ def main():
         if key in blocks_subgoals_dict:
             print(f"\n--- {name}_subgoals ---")
             result2 = solve_problem_with_subgoals_astar(
-                problem, heuristic, blocks_subgoals_dict[key], name, timeout=300
+                problem, heuristic, blocks_subgoals_dict[key], name, timeout=180
             )
             result1 = solve_problem_with_subgoals(
-                problem, blocks_subgoals_dict[key], name, timeout=300
+                problem, blocks_subgoals_dict[key], name, timeout=180
             )
             result1['name'] = name + '_subgoals'
             result1['domain'] = 'blocksword'

@@ -312,12 +312,15 @@ def get_dinner_subgoals():
             {'prepared_chicken': True, 'prepared_rice': True, 'prepared_dessert': True},
             {'cooked_chicken': True, 'cooked_rice': True},
             {'table_set': True, 'wine_opened': True},
+            {'cooked_chicken': True, 'cooked_rice': True},
         ],
         'dinner_3': [
             {'have_chicken': True, 'have_rice': True, 'have_dessert_ingredients': True},
             {'prepared_chicken': True, 'prepared_rice': True, 'prepared_dessert': True},
             {'cooked_chicken': True, 'cooked_rice': True, 'cooked_dessert': True},
             {'table_set': True, 'wine_opened': True},
+            {'have_chicken': True, 'have_rice': True, 'have_dessert_ingredients': True},
+            {'prepared_chicken': True, 'prepared_rice': True, 'prepared_dessert': True},
         ],
     }
 

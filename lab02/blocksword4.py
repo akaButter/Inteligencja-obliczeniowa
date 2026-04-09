@@ -178,7 +178,7 @@ def get_blocksword_subgoals():
         ],
         'blocksword_3': [
             {'clear_d': True, 'clear_h': True},
-            {'on_d': 't1', 'on_h': 't2'},
+            {'on_d': 't1', 'on_h': 't2', 'on_b': 't3'},
         ],
     }
 
