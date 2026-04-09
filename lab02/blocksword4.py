@@ -1,28 +1,12 @@
 """
-BLOCKSWORD (Blocks World - Extended)
-Domain: Blocks world planning with blocks that can be moved
-Source: https://github.com/primaryobjects/strips/blob/master/examples/blocksworld4
-
-Problem: Arrange blocks on tables by moving them
-- Blocks can be on other blocks or on tables
-- Only the topmost block can be moved
-- Complex multi-goal arrangement problems
+BLOCKSWORD (Blocks World - Corrected)
+Achievable goals - bloki mogą być na sobie lub na stołach
 """
 
 from aipython_strips import Strips, STRIPS_domain, Planning_problem
 
-# ==================================================================================
-# BLOCKSWORD DOMAIN DEFINITION
-# ==================================================================================
-
 def create_blocks_world_domain(blocks, tables):
-    """
-    Create a blocks world domain.
-    Features:
-    - on_<block>: location (block or table) - where the block is
-    - clear_<obj>: {True, False} - whether obj has nothing on top
-    """
-
+    """Create blocks world domain"""
     boolean = {True, False}
     blocks_set = set(blocks)
     tables_set = set(tables)
@@ -30,27 +14,14 @@ def create_blocks_world_domain(blocks, tables):
 
     feature_domain_dict = {}
 
-    # For each block, track what it's on
     for block in blocks_set:
         possible_locations = blocks_and_tables - {block}
         feature_domain_dict[f'on_{block}'] = possible_locations
 
-    # For each block and table, whether it's clear (nothing on top)
     for obj in blocks_and_tables:
         feature_domain_dict[f'clear_{obj}'] = boolean
 
-    # Create move actions
     actions = set()
-
-    # Move block X from Y to Z
-    # Preconditions:
-    #   - X is on Y
-    #   - X is clear
-    #   - Z is clear
-    # Effects:
-    #   - X is on Z
-    #   - Y is clear
-    #   - Z is not clear
 
     for x in blocks_set:
         for y in blocks_and_tables:
@@ -78,31 +49,33 @@ def create_blocks_world_domain(blocks, tables):
 
 def blocksword_problem_1():
     """
-    PROBLEM 1 (Basic - 3 blocks, 2 tables)
-    Initial: c on b on a on table1
-    Goal: a on table1; b on table2; c on table1
-    - Simple rearrangement
-    - ~3-4 actions minimum
+    PROBLEM 1
+    Initial: a on t1, b on t2, c on t3
+    Goal: a on t1, b on a, c on t2
+    Solution: move_b_from_t2_to_t1, then move_c_from_t3_to_t2
+    Requires: ~4 actions
     """
     blocks = ['a', 'b', 'c']
-    tables = ['t1', 't2']
+    tables = ['t1', 't2', 't3']
     domain = create_blocks_world_domain(blocks, tables)
 
     initial_state = {
         'on_a': 't1',
-        'on_b': 'a',
-        'on_c': 'b',
-        'clear_a': False,
-        'clear_b': False,
+        'on_b': 't2',
+        'on_c': 't3',
+        'clear_a': True,
+        'clear_b': True,
         'clear_c': True,
         'clear_t1': False,
-        'clear_t2': True,
+        'clear_t2': False,
+        'clear_t3': False,
     }
 
+    # Achievable: b on a, c on t2, a on t1
     goal = {
         'on_a': 't1',
-        'on_b': 't2',
-        'on_c': 't1',
+        'on_b': 'a',
+        'on_c': 't2',
     }
 
     return Planning_problem(domain, initial_state, goal)
@@ -110,34 +83,35 @@ def blocksword_problem_1():
 
 def blocksword_problem_2():
     """
-    PROBLEM 2 (Medium - 4 blocks, 2 tables)
-    Initial: b on a on t1; d on c on t2
-    Goal: a on t1, b on t2, c on b, d on t1
-    - Requires several moves
-    - ~6-8 actions minimum
+    PROBLEM 2
+    Initial: a on t1, b on t2, c on t3, d on t4
+    Goal: a on b, c on d, b on t1, d on t2
+    Solution: needs to stack blocks and rearrange
+    Requires: ~6-8 actions
     """
     blocks = ['a', 'b', 'c', 'd']
-    tables = ['t1', 't2']
+    tables = ['t1', 't2', 't3']
     domain = create_blocks_world_domain(blocks, tables)
 
     initial_state = {
         'on_a': 't1',
-        'on_b': 'a',
-        'on_c': 't2',
-        'on_d': 'c',
-        'clear_a': False,
+        'on_b': 't2',
+        'on_c': 't3',
+        'on_d': 't1',
+        'clear_a': True,
         'clear_b': True,
-        'clear_c': False,
+        'clear_c': True,
         'clear_d': True,
         'clear_t1': False,
         'clear_t2': False,
+        'clear_t3': False,
     }
 
     goal = {
-        'on_a': 't1',
-        'on_b': 't2',
-        'on_c': 'b',
-        'on_d': 't1',
+        'on_a': 'b',
+        'on_b': 't1',
+        'on_c': 'd',
+        'on_d': 't2',
     }
 
     return Planning_problem(domain, initial_state, goal)
@@ -193,20 +167,14 @@ def blocksword_problem_3():
 
 
 def get_blocksword_subgoals():
-    """
-    Subgoals for blocksword problems:
-    1. Problem 1: (a) Clear top blocks, (b) Move to tables
-    2. Problem 2: (a) Separate blocks, (b) Move to destinations
-    3. Problem 3: (a) Clear top blocks, (b) Distribute to tables
-    """
     return {
         'blocksword_1': [
-            {'clear_c': True},
-            {'on_b': 't2'},
+            {'clear_b': True},
+            {'on_b': 't3'},
         ],
         'blocksword_2': [
-            {'clear_d': True, 'clear_b': True},
-            {'on_b': 't2', 'on_d': 't1'},
+            {'clear_a': True, 'clear_c': True},
+            {'on_a': 'b', 'on_c': 'd'},
         ],
         'blocksword_3': [
             {'clear_d': True, 'clear_h': True},
@@ -216,20 +184,12 @@ def get_blocksword_subgoals():
 
 
 def heuristic_blocksword(state_dict, goal_dict):
-    """
-    Heuristic for blocks world:
-    Count how many blocks are not in their goal position.
-    """
-    blocked_count = 0
-
-    for block_key, goal_loc in goal_dict.items():
-        if block_key in state_dict:
-            if state_dict[block_key] != goal_loc:
-                blocked_count += 1
-
-            # Check if block is clear
-            clear_key = block_key.replace('on_', 'clear_')
-            if clear_key in state_dict and not state_dict[clear_key]:
-                blocked_count += 1
-
-    return blocked_count
+    """Count blocks not in goal + blocked blocks"""
+    count = 0
+    for key, goal_val in goal_dict.items():
+        if state_dict.get(key) != goal_val:
+            count += 1
+            block = key.replace('on_', '')
+            if not state_dict.get(f'clear_{block}', True):
+                count += 1
+    return count
