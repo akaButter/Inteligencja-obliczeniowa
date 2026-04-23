@@ -1,94 +1,179 @@
 import gymnasium as gym
 import ale_py
-from gymnasium.wrappers import RecordEpisodeStatistics, RecordVideo
+from gymnasium.wrappers import RecordVideo
 import numpy as np
+import matplotlib.pyplot as plt
+from collections import defaultdict
+import random
+import os
+from tqdm import tqdm  # <-- NOWY IMPORT Paska postępu
 
-training_period = 250           # Record video every 250 episodes
-num_training_episodes = 10_000
+# ==========================================
+# 1. Konfiguracja Hiperparametrów
+# ==========================================
+NUM_EPISODES = 1000  # Całkowita liczba epizodów (zwiększ np. do 1000, gdy upewnisz się że działa)
+RECORD_INTERVAL = max(1, NUM_EPISODES // 4)  # Nagrywaj wideo co 1/4 epizodów
 
-def run_basic(env):
-    # Reset the environment to generate the first observation
-    observation, info = env.reset(seed=42)
+ALPHA = 0.1  # Learning Rate - "stabilny balans"
+GAMMA = 0.9  # Współczynnik dyskontowy - "złoty środek"
+EPSILON_START = 1.0  # 100% eksploracji na początku
+EPSILON_END = 0.1  # Zawsze zostawiamy minimum 10% na losowe akcje
+EPSILON_DECAY = 0.995  # Szybkość "zanikania" eksploracji
 
-    for _ in range(1000):
-        # Losowy wybór akcji
-        action = env.action_space.sample()
 
-        # Wykonanie kroku w środowisku
-        observation, reward, terminated, truncated, info = env.step(action)
+# ==========================================
+# 2. Pomocnicza funkcja dyskretyzacji stanu
+# ==========================================
+def discretize_state(ram_obs):
+    """
+    Pamięć RAM Atari to 128 bajtów. Dzielimy wartości przez 32.
+    Aby uniknąć problemów z 'unhashable type: numpy.ndarray',
+    wymuszamy spłaszczenie i całkowitą konwersję do standardowych intów Pythona.
+    """
+    binned_obs = (np.array(ram_obs).flatten() // 32).astype(int)
+    return tuple(binned_obs.tolist())
 
-        # Jeśli epizod się skończył, zresetuj grę
-        if terminated or truncated:
-            observation, info = env.reset()
 
-    env.close()
-
-def run_collect_reward(env):
-    num_eval_episodes = 4
-    # Add video recording for every episode
-    # env = RecordVideo(
-    #     env,
-    #     video_folder="cartpole-agent",  # Folder to save videos
-    #     name_prefix="eval",  # Prefix for video filenames
-    #     episode_trigger=lambda x: True  # Record every episode
-    # )
-
-    # Add episode statistics tracking
-    env = RecordEpisodeStatistics(env, buffer_length=num_eval_episodes)
-
-    print(f"Starting evaluation for {num_eval_episodes} episodes...")
-    print(f"Videos will be saved to: cartpole-agent/")
-
-    for episode_num in range(num_eval_episodes):
-        obs, info = env.reset()
-        episode_reward = 0
-        step_count = 0
-
-        episode_over = False
-        while not episode_over:
-            # Replace this with your trained agent's policy
-            action = env.action_space.sample()  # Random policy for demonstration
-
-            obs, reward, terminated, truncated, info = env.step(action)
-            episode_reward += reward
-            step_count += 1
-
-            episode_over = terminated or truncated
-
-        print(f"Episode {episode_num + 1}: {step_count} steps, reward = {episode_reward}")
-
-    env.close()
-
-    # Print summary statistics
-    print(f'\nEvaluation Summary:')
-    print(f'Episode durations: {list(env.time_queue)}')
-    print(f'Episode rewards: {list(env.return_queue)}')
-    print(f'Episode lengths: {list(env.length_queue)}')
-
-    # Calculate some useful metrics
-    avg_reward = np.sum(env.return_queue)
-    avg_length = np.sum(env.length_queue)
-    std_reward = np.std(env.return_queue)
-
-    print(f'\nAverage reward: {avg_reward:.2f} ± {std_reward:.2f}')
-    print(f'Average episode length: {avg_length:.1f} steps')
-    print(f'Success rate: {sum(1 for r in env.return_queue if r > 0) / len(env.return_queue):.1%}')
-
-def print_info(env):
-    # Discrete action space (button presses)
-    env = gym.make("CartPole-v1")
-    print(f"Action space: {env.action_space}")  # Discrete(2) - left or right
-    print(f"Sample action: {env.action_space.sample()}")  # 0 or 1
-
-    # Box observation space (continuous values)
-    print(f"Observation space: {env.observation_space}")  # Box with 4 values
-    # Box([-4.8, -inf, -0.418, -inf], [4.8, inf, 0.418, inf])
-    print(f"Sample observation: {env.observation_space.sample()}")  # Random valid observation
-
-if __name__ == "__main__":
-    # Ręczna rejestracja środowisk Atari (wymagane w Gymnasium >= 1.0.0)
+# ==========================================
+# 3. Główna funkcja trenująca Q-Learning
+# ==========================================
+def train_q_learning():
+    # Ręczna rejestracja środowisk Atari
     gym.register_envs(ale_py)
 
-    env = gym.make("ALE/KungFuMaster-v5", render_mode="human")
+    # POPRAWKA: Przywrócono wersję "-ram-v5", aby tabela Q miała szansę działać!
+    env = gym.make("ALE/KungFuMaster-v5", obs_type="ram", render_mode="rgb_array")
 
-    run_collect_reward(env)
+    # Wrapper do nagrywania wideo
+    video_folder = "kungfu_qlearning_videos"
+    os.makedirs(video_folder, exist_ok=True)
+
+    env = RecordVideo(
+        env,
+        video_folder=video_folder,
+        name_prefix="qlearn-training",
+        episode_trigger=lambda ep: ep % RECORD_INTERVAL == 0,
+        disable_logger=True
+    )
+
+    action_size = env.action_space.n
+
+    # Inicjalizacja Pustej Tabeli Q
+    q_table = defaultdict(lambda: np.ones(action_size))
+
+    epsilon = EPSILON_START
+    rewards_history = []
+    lengths_history = []
+
+    print(f"Rozpoczynam trening Q-Learning na {NUM_EPISODES} epizodów.")
+    print(f"Wideo będzie nagrywane co {RECORD_INTERVAL} epizodów do folderu '{video_folder}'.\n")
+
+    # Pasek postępu
+    pbar = tqdm(range(NUM_EPISODES), desc="Trening Q-Learning", unit="epizod")
+
+    for episode in pbar:
+        obs, info = env.reset()
+        state = discretize_state(obs)
+
+        episode_reward = 0
+        steps = 0
+        episode_over = False
+
+        while not episode_over:
+            # -----------------------------------
+            # KROK 1: Wybór akcji (Epsilon-Greedy)
+            # -----------------------------------
+            if random.random() < epsilon:
+                # EKSPLORACJA: Wybierz całkowicie losową akcję
+                action = env.action_space.sample()
+            else:
+                # EKSPLOATACJA Z ŁAMANIEM REMISÓW:
+                # Zamiast action = np.argmax(q_table[state])
+                q_values = q_table[state]
+                max_q = np.max(q_values)
+                # Znajdź wszystkie akcje, które mają ten najwyższy wynik
+                best_actions = np.where(q_values == max_q)[0]
+                # Wylosuj jedną z nich (dzięki temu omija "zacinanie się" na akcji 0)
+                action = random.choice(best_actions)
+
+            # -----------------------------------
+            # KROK 2: Wykonanie akcji w środowisku
+            # -----------------------------------
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            next_state = discretize_state(next_obs)
+            episode_over = terminated or truncated
+
+            # -----------------------------------
+            # KROK 3: Aktualizacja Tabeli Q (Równanie Q-Learningu)
+            # -----------------------------------
+            best_next_q = np.max(q_table[next_state]) if not episode_over else 0.0
+
+            td_target = reward + GAMMA * best_next_q
+            td_error = td_target - q_table[state][action]
+
+            q_table[state][action] += ALPHA * td_error
+
+            # Przejście do nowego stanu
+            state = next_state
+            episode_reward += reward
+            steps += 1
+
+        # Aktualizacja historii i zmniejszenie epsilona na koniec epizodu
+        rewards_history.append(episode_reward)
+        lengths_history.append(steps)
+        epsilon = max(EPSILON_END, epsilon * EPSILON_DECAY)
+
+        # Aktualizacja danych na pasku postępu (co 10 epizodów)
+        if (episode + 1) % 10 == 0:
+            avg_rew = np.mean(rewards_history[-50:]) if len(rewards_history) >= 50 else np.mean(rewards_history)
+            pbar.set_postfix({
+                "Śr. nagroda (ost. 50)": f"{avg_rew:.1f}",
+                "Epsilon": f"{epsilon:.3f}",
+                "Zbadane stany": len(q_table)
+            })
+
+    env.close()
+
+    # ==========================================
+    # 4. Statystyki Końcowe
+    # ==========================================
+    print("\n" + "=" * 40)
+    print("PODSUMOWANIE TRENINGU")
+    print("=" * 40)
+    print(f"Rozmiar Tabeli Q (zbadane unikalne stany): {len(q_table)}")
+    print(f"Najwyższa nagroda w pojedynczym epizodzie: {np.max(rewards_history):.1f}")
+    print(f"Średnia długość epizodu: {np.mean(lengths_history):.1f} kroków")
+
+    plot_learning_curves(rewards_history)
+
+
+# ==========================================
+# 5. Generowanie Wykresów
+# ==========================================
+def plot_learning_curves(rewards):
+    print("Generowanie krzywej uczenia...")
+    episodes = range(len(rewards))
+
+    plt.figure(figsize=(12, 6))
+
+    # Surowe nagrody (tło)
+    plt.plot(episodes, rewards, alpha=0.3, label='Nagroda (surowa)', color='#1f77b4')
+
+    # Średnia krocząca
+    window = max(10, len(rewards) // 20)  # Automatyczne okno w zależności od liczby epizodów
+    if len(rewards) >= window:
+        moving_avg = np.convolve(rewards, np.ones(window) / window, mode='valid')
+        plt.plot(range(window - 1, len(rewards)), moving_avg,
+                 label=f'Średnia krocząca ({window} epizodów)', color='red', linewidth=2)
+
+    plt.xlabel('Numer epizodu')
+    plt.ylabel('Suma nagród')
+    plt.title(f'Krzywa Uczenia Q-Learning (Gamma={0.9}, Alpha={0.1})')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == "__main__":
+    train_q_learning()
