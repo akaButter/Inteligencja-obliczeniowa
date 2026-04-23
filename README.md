@@ -3,7 +3,7 @@
 # TODO:
 ## Gymnasium - wstępny wybór światów
 - problem ciągły = lunar_lander
-- problem dyskretny - taxi
+- problem dyskretny - taxi, kungfu master
 
 # DONE:
 ## EasyAI 
