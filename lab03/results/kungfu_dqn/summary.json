@@ -1,0 +1,15 @@
+{
+  "gamma": 0.9,
+  "best_reward": 1400.0,
+  "worst_reward": 0.0,
+  "mean_reward": 598.0,
+  "std_reward": 348.99283660270163,
+  "mean_first_25%": 500.0,
+  "mean_last_25%": 669.2307692307693,
+  "improvement": 169.23076923076928,
+  "mean_length": 996.36,
+  "mean_loss": 0.0020459424826608564,
+  "discounted_return_first_1000_steps": 5171.121962917142,
+  "algorithm": "DQN",
+  "num_episodes": 50
+}

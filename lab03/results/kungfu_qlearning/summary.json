@@ -1,0 +1,16 @@
+{
+  "best_reward": 8000.0,
+  "worst_reward": 0.0,
+  "mean_reward": 1562.0,
+  "std_reward": 1323.3376994050561,
+  "mean_first_25%": 665.3333333333334,
+  "mean_last_25%": 2946.6666666666665,
+  "improvement": 2281.333333333333,
+  "mean_length": 1117.8366666666666,
+  "explored_states": 248,
+  "discounted_return_first_1000_steps": 5015.6835175809965,
+  "algorithm": "Q-Learning",
+  "gamma": 0.9,
+  "alpha": 0.1,
+  "num_episodes": 300
+}

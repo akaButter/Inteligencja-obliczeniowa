@@ -1,0 +1,18 @@
+{
+  "gamma": 0.9,
+  "n_episodes": 146,
+  "best_reward": 3.266981,
+  "worst_reward": -548.724368,
+  "mean_reward": -123.87876943150685,
+  "std_reward": 73.60419513670088,
+  "mean_first_25%": -168.02075158333335,
+  "mean_last_25%": -114.92232172972975,
+  "improvement": 53.098429853603605,
+  "mean_length": 543.2602739726027,
+  "solved_episodes": 0,
+  "solved_pct": 0.0,
+  "discounted_return_first_1000": -1764.2364540384838,
+  "algorithm": "DQN (SB3)",
+  "total_timesteps": 80000,
+  "learning_rate": 0.00063
+}

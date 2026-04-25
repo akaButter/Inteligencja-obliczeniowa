@@ -1,0 +1,18 @@
+{
+  "gamma": 0.9,
+  "n_episodes": 188,
+  "best_reward": 84.536185,
+  "worst_reward": -488.499349,
+  "mean_reward": -146.7344612819149,
+  "std_reward": 113.73621927110986,
+  "mean_first_25%": -222.91508321276598,
+  "mean_last_25%": -110.09935840425528,
+  "improvement": 112.8157248085107,
+  "mean_length": 434.75531914893617,
+  "solved_episodes": 0,
+  "solved_pct": 0.0,
+  "discounted_return_first_1000": -3148.191269114062,
+  "algorithm": "PPO",
+  "total_timesteps": 80000,
+  "learning_rate": 0.0003
+}
