@@ -5,7 +5,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import gymnasium as gym
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import BaseCallback
 
@@ -39,7 +39,20 @@ def run_one(gamma, learning_rate=3e-4, total_timesteps=30_000, seed=0):
     env.close()
     return cb.episode_rewards, cb.episode_lengths
 
-
+def run_one_DQN(gamma, learning_rate=3e-4, total_timesteps=30_000, seed=0):
+    env = gym.make("LunarLander-v3", continuous=False, render_mode="rgb_array")
+    env = Monitor(env)
+    
+    model = DQN(
+        "MlpPolicy", env, verbose=0, device="cpu", learning_rate=learning_rate, gamma=gamma, 
+        seed=seed, buffer_size=50_000, learning_starts=1000, batch_size=64,
+        exploration_fraction=0.1
+    )
+    
+    cb = RewardLoggerCallback()
+    model.learn(total_timesteps=total_timesteps, callback=cb)
+    env.close()
+    return cb.episode_rewards, cb.episode_lengths
 def discounted_total(rewards, gamma, n_first=1000):
     """Całkowita zdyskontowana nagroda w pierwszych n_first epizodach."""
     return float(sum(r * (gamma ** i) for i, r in enumerate(rewards[:n_first])))
@@ -176,7 +189,71 @@ def hyperparam_search(save_dir=DEFAULT_RESULTS_DIR):
         json.dump(results, f, indent=2)
     return results
 
+def hyperparam_search_DQN(save_dir=DEFAULT_RESULTS_DIR):
+    os.makedirs(save_dir, exist_ok=True)
+    
+    grid = {
+        "learning_rate": [1e-4, 5e-4],
+        "gamma": [0.95, 0.99],
+    }
+    
+    results = []
+    for lr, g in itertools.product(grid["learning_rate"], grid["gamma"]):
+        print(f"\n--- HPO (DQN): lr={lr}, gamma={g} ---")
+        rewards, lengths = run_one_DQN(gamma=g, learning_rate=lr, total_timesteps=20_000)
+        
+        score = discounted_total(rewards, g, 1000) 
+        last25 = float(np.mean(rewards[3 * len(rewards) // 4:])) if rewards else 0.0
+        
+        results.append({
+            "learning_rate": lr,
+            "gamma": g,
+            "n_episodes": len(rewards),
+            "mean_reward": float(np.mean(rewards)) if rewards else 0.0,
+            "mean_last_25%": last25,
+            "discounted_first_1000": score,
+        })
+    # Sort od najlepszego
+    results.sort(key=lambda r: r["discounted_first_1000"], reverse=True)
 
+    print("\n" + "=" * 70)
+    print(" PODSUMOWANIE: OPTYMALIZACJA HIPERPARAMETRÓW (DQN Lunar Lander)")
+    print(" Cel: max zdyskontowana nagroda w pierwszych 1000 epizodach")
+    print("=" * 70)
+    print(f"  {'lr':>10} {'γ':>8} {'mean':>10} {'last 25%':>10} {'disc.1000':>12}")
+    for r in results:
+        marker = " <-- najlepszy" if r is results[0] else ""
+        print(f"  {r['learning_rate']:>10.4f} {r['gamma']:>8} "
+              f"{r['mean_reward']:>10.1f} {r['mean_last_25%']:>10.1f} "
+              f"{r['discounted_first_1000']:>12.1f}{marker}")
+    print("=" * 70 + "\n")
+
+    # Heatmapa
+    lrs = sorted(set(r["learning_rate"] for r in results))
+    gms = sorted(set(r["gamma"] for r in results))
+    grid_vals = np.zeros((len(lrs), len(gms)))
+    for r in results:
+        i, j = lrs.index(r["learning_rate"]), gms.index(r["gamma"])
+        grid_vals[i, j] = r["discounted_first_1000"]
+
+    plt.figure(figsize=(7, 5))
+    im = plt.imshow(grid_vals, cmap="viridis", aspect="auto")
+    plt.xticks(range(len(gms)), [f"γ={g}" for g in gms])
+    plt.yticks(range(len(lrs)), [f"lr={lr}" for lr in lrs])
+    for i in range(len(lrs)):
+        for j in range(len(gms)):
+            plt.text(j, i, f"{grid_vals[i, j]:.0f}",
+                     ha="center", va="center", color="white", fontsize=11)
+    plt.colorbar(im, label="zdyskontowana nagroda (1000 epiz.)")
+    plt.title("HPO: zdyskontowana suma nagród (DQN Lunar Lander)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, "hpo_heatmap_dqn.png"),
+                dpi=120, bbox_inches="tight")
+    plt.show()
+
+    with open(os.path.join(save_dir, "hpo_results_dqn.json"), "w") as f:
+        json.dump(results, f, indent=2)
+    return results
 if __name__ == "__main__":
-    gamma_comparison()
-    hyperparam_search()
+    #gamma_comparison()
+    hyperparam_search_DQN()
