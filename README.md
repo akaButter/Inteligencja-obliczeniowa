@@ -1,9 +1,11 @@
 # Inteligencja-obliczeniowa
 
 # TODO:
-## Gymnasium - wstępny wybór światów
-- problem ciągły = lunar_lander
-- problem dyskretny - taxi, kungfu master
+## Gymnasium - własne środowisko
+- wysyłać cały (działający!) notatnik oraz pdf oraz zip z projektem
+- zooombie zjadające móóózgi, im się bardziej nażera tym wolniej chodzi,
+- za zjadanie nie-móóóózgów kara aż zombie umiera po jakiejś wartości
+- srodowisko 1 -wymiarowe ciągłe lub dyskretne z bardzo wieloma wartościami
 
 # DONE:
 ## EasyAI 
@@ -33,4 +35,8 @@
 * STRIPS_domain - opis przestrzeni (cecha i wartości cechy) i akcje
 
 Wybranie dziedziny - conajmniej 50 stanów, jak nie ma to rozszerzyć dziedzine
+
+## Gymnasium - wstępny wybór światów
+- problem ciągły = lunar_lander
+- problem dyskretny - taxi, kungfu master
 
