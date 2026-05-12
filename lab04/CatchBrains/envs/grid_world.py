@@ -314,7 +314,7 @@ class CatchBrainsEnv(gym.Env):
         else:
             self._is_moving = False
 
-        speed = BASE_SPEED / (1.0 + self.score * SLOWDOWN)
+        speed = BASE_SPEED / max(1.0, 1.0 + self.score * SLOWDOWN)
         self.zombie_x = float(np.clip(self.zombie_x + act * speed, 0, self.window_w))
 
         # advance items
@@ -365,6 +365,7 @@ class CatchBrainsEnv(gym.Env):
             else:
                 # passed below catch zone without being caught
                 if item.item_type == "brain":
+                    self.score -= 10
                     reward -= 5
                 # bodypart miss: no penalty
 
