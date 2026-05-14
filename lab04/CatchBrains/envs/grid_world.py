@@ -202,7 +202,8 @@ class CatchBrainsEnv(gym.Env):
             pygame.display.flip()
             self._clock.tick(8)
 
-    def _play_death(self):
+    def _play_death(self, end_score):
+
         for i in range(len(self._dying)):
             self._window.blit(self._bg, (0, 0))
             self._window.blit(
@@ -220,7 +221,11 @@ class CatchBrainsEnv(gym.Env):
 
         font_big = pygame.font.SysFont("monospace", 52, bold=True)
         font_sub = pygame.font.SysFont("monospace", 30)
-        go_surf = font_big.render("GAME OVER", True, (220, 40, 60))
+        if end_score >= MAX_SCORE:
+            go_surf = font_big.render("YOU ATE THEM ALL", True, (220, 40, 60))
+        else:
+            go_surf = font_big.render("GAME OVER", True, (220, 40, 60))
+
         sc_surf = font_sub.render(f"Score: {int(self.score)}", True, (230, 230, 60))
         cx, cy = self.window_w // 2, self.window_h // 2
         self._window.blit(go_surf, (cx - go_surf.get_width() // 2, cy - 60))
@@ -370,19 +375,21 @@ class CatchBrainsEnv(gym.Env):
                     reward -= 1
                 # bodypart miss: no penalty
         if self.items:
-            # Znajdź najbliższy mózg
             brains = [it for it in self.items if it.item_type == "brain"]
+            body_parts = [it for it in self.items if it.item_type != "brain"]
             if brains:
                 closest_brain = min(brains, key=lambda it: it.y)
                 dist = abs(self.zombie_x - closest_brain.x)
-                # Mała nagroda za bycie blisko mózgu w osi X (max 0.1 na krok)
                 if dist < 100:
                     reward += 0.1 * (1.0 - (dist / self.window_w))
-                # if dist < 50: # Jeśli jesteś prawie pod mózgiem
+                # if dist < 50:
                 #     reward += 2.0
                 # else:
                 #     reward -= 0.1
-
+            if body_parts:
+                closest_part = min(body_parts, key=lambda it: it.y)
+                dist = abs(self.zombie_x - closest_part.x)
+                reward += 0.1 * (dist / self.window_w)
         self.items = still_falling
 
         if self.lives <= 0:
@@ -398,7 +405,7 @@ class CatchBrainsEnv(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
             if terminated:
-                self._play_death()
+                self._play_death(self.score)
 
         return self._get_obs(), reward, terminated, False, {"score": self.score, "lives": self.lives}
 
