@@ -389,14 +389,15 @@ class CatchBrainsEnv(gym.Env):
             if body_parts:
                 closest_part = min(body_parts, key=lambda it: it.y)
                 dist = abs(self.zombie_x - closest_part.x)
-                reward += 0.1 * (dist / self.window_w)
+                if dist <  50:
+                    reward -= 0.1 * (1.0 - (dist / self.window_w))
         self.items = still_falling
 
         if self.lives <= 0:
             reward -= 50
             terminated = True
         elif self.score >= MAX_SCORE:
-            reward += 100 
+            reward += 500
             terminated = True
             print("Zwycięstwo! Osiągnięto limit punktów.")
 

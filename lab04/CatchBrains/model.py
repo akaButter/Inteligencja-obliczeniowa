@@ -18,7 +18,8 @@ model = PPO(
     verbose=1, 
     tensorboard_log="./ppo_zombie_logs/"
 )
-model.learn(total_timesteps=200000)
+model.learn(total_timesteps=400000,
+            progress_bar=True)
 
 
 df = pd.read_csv("./logs/monitor.csv", skiprows=1)
@@ -29,5 +30,5 @@ plt.xlabel("Epizod")
 plt.ylabel("Total Reward")
 plt.show()
 
-model.save("zombie_agent_v1")
+model.save("zombie_agent_v2")
 print("Model saved.")
