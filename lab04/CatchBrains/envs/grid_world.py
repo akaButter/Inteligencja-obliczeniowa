@@ -16,11 +16,11 @@ SLOWDOWN = 0.02
 ITEM_SIZE = 60          # base size; actual items are randomly scaled
 ITEM_SIZE_MIN = 0.7
 ITEM_SIZE_MAX = 1.4
-ITEM_SPEED_MIN = 1.5
-ITEM_SPEED_MAX = 5.0
+ITEM_SPEED_MIN = 1.5 / 2
+ITEM_SPEED_MAX = 5.0 / 2
 ZOMBIE_W, ZOMBIE_H = 120, 180
 HUD_HEIGHT = 60
-SPAWN_INTERVAL = 40
+SPAWN_INTERVAL = 40 * 3
 MAX_ITEMS_ON_SCREEN = 6
 BRAIN_CHANCE = 0.65
 
@@ -29,6 +29,7 @@ WALKING_FRAMES = 10
 DYING_FRAMES = 10
 WALK_IDLE_FRAME = WALKING_FRAMES - 2   # klatka 8 — zombie stoi
 
+MAX_SCORE = 100.0
 
 class SpriteSheet:
     def __init__(self, path: Path, num_frames: int):
@@ -109,8 +110,8 @@ class CatchBrainsEnv(gym.Env):
         self.max_lives = lives
         self.render_mode = render_mode
 
-        obs_low = np.zeros(12, dtype=np.float32)
-        obs_high = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, np.inf], dtype=np.float32)
+        obs_low = np.zeros(11, dtype=np.float32)
+        obs_high = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32)
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
 
@@ -245,7 +246,7 @@ class CatchBrainsEnv(gym.Env):
     # ── observation ──────────────────────────────────────────────────────────
 
     def _get_obs(self) -> np.ndarray:
-        obs = np.zeros(12, dtype=np.float32)
+        obs = np.zeros(11, dtype=np.float32)
         obs[0] = self.zombie_x / self.window_w
         for i, item in enumerate(sorted(self.items, key=lambda it: it.y, reverse=True)[:3]):
             base = 1 + i * 3
@@ -253,7 +254,7 @@ class CatchBrainsEnv(gym.Env):
             obs[base + 1] = item.y / self.game_h
             obs[base + 2] = 1.0 if item.item_type == "brain" else 0.0
         obs[10] = self.lives / self.max_lives
-        obs[11] = self.score / 100.0
+        # obs[11] = self.score / 100.0
         return obs
 
     # ── spawning ─────────────────────────────────────────────────────────────
@@ -355,7 +356,7 @@ class CatchBrainsEnv(gym.Env):
                 if horizontal_ok:
                     if item.item_type == "brain":
                         self.score += 10
-                        reward += 10
+                        reward += 20
                     else:
                         self.lives -= 1
                         reward -= 15
@@ -366,14 +367,31 @@ class CatchBrainsEnv(gym.Env):
                 # passed below catch zone without being caught
                 if item.item_type == "brain":
                     self.score -= 10
-                    reward -= 5
+                    reward -= 1
                 # bodypart miss: no penalty
+        if self.items:
+            # Znajdź najbliższy mózg
+            brains = [it for it in self.items if it.item_type == "brain"]
+            if brains:
+                closest_brain = min(brains, key=lambda it: it.y)
+                dist = abs(self.zombie_x - closest_brain.x)
+                # Mała nagroda za bycie blisko mózgu w osi X (max 0.1 na krok)
+                if dist < 100:
+                    reward += 0.1 * (1.0 - (dist / self.window_w))
+                # if dist < 50: # Jeśli jesteś prawie pod mózgiem
+                #     reward += 2.0
+                # else:
+                #     reward -= 0.1
 
         self.items = still_falling
 
         if self.lives <= 0:
             reward -= 50
             terminated = True
+        elif self.score >= MAX_SCORE:
+            reward += 100 
+            terminated = True
+            print("Zwycięstwo! Osiągnięto limit punktów.")
 
         self._steps += 1
 

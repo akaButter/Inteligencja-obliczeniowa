@@ -9,6 +9,7 @@ def main():
     obs, _ = env.reset()
 
     running = True
+    total_reward = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -23,10 +24,10 @@ def main():
             action = [0.0]
 
         obs, reward, terminated, truncated, info = env.step(action)
-
+        total_reward += reward
         if terminated or truncated:
             running = False
-
+    print(f"reward={total_reward:8.1f}  score={info['score']:.0f}  lives={info['lives']}")
     env.close()
 
 
