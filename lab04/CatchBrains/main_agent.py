@@ -5,7 +5,7 @@ from stable_baselines3 import PPO
 import numpy as np
 def main():
     env = gym.make("CatchBrains/CatchBrains", render_mode=None)
-    model = PPO.load("zombie_agent_v3")
+    model = PPO.load("zombie_agent_v4")
     N = 100
     wins = 0
     scores = []

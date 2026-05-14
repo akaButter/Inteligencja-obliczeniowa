@@ -110,8 +110,8 @@ class CatchBrainsEnv(gym.Env):
         self.max_lives = lives
         self.render_mode = render_mode
 
-        obs_low = np.zeros(11, dtype=np.float32)
-        obs_high = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32)
+        obs_low  = np.array([0,0,0,0,0,0,0,0,0,0,0,-1], dtype=np.float32)
+        obs_high = np.array([1,1,1,1,1,1,1,1,1,1,1, 1], dtype=np.float32)
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
 
@@ -251,7 +251,7 @@ class CatchBrainsEnv(gym.Env):
     # ── observation ──────────────────────────────────────────────────────────
 
     def _get_obs(self) -> np.ndarray:
-        obs = np.zeros(11, dtype=np.float32)
+        obs = np.zeros(12, dtype=np.float32)
         obs[0] = self.zombie_x / self.window_w
         for i, item in enumerate(sorted(self.items, key=lambda it: it.y, reverse=True)[:3]):
             base = 1 + i * 3
@@ -259,7 +259,7 @@ class CatchBrainsEnv(gym.Env):
             obs[base + 1] = item.y / self.game_h
             obs[base + 2] = 1.0 if item.item_type == "brain" else 0.0
         obs[10] = self.lives / self.max_lives
-        # obs[11] = self.score / 100.0
+        obs[11] = float(np.clip(self.score / MAX_SCORE, -1.0, 1.0))
         return obs
 
     # ── spawning ─────────────────────────────────────────────────────────────
@@ -364,40 +364,37 @@ class CatchBrainsEnv(gym.Env):
                         reward += 20
                     else:
                         self.lives -= 1
-                        reward -= 15
+                        reward -= 30
                     # caught — remove from list
                 else:
                     still_falling.append(item)  # still in zone, not aligned yet
             else:
                 # passed below catch zone without being caught
                 if item.item_type == "brain":
-                    self.score -= 10
-                    reward -= 1
+                    reward -= 4
                 # bodypart miss: no penalty
         if self.items:
             brains = [it for it in self.items if it.item_type == "brain"]
             body_parts = [it for it in self.items if it.item_type != "brain"]
             if brains:
-                closest_brain = min(brains, key=lambda it: it.y)
-                dist = abs(self.zombie_x - closest_brain.x)
-                if dist < 100:
-                    reward += 0.1 * (1.0 - (dist / self.window_w))
-                # if dist < 50:
-                #     reward += 2.0
-                # else:
-                #     reward -= 0.1
+                urgent_brain = max(brains, key=lambda it: it.y)
+                # strong pull only when brain is in bottom quarter — close to catch zone
+                if urgent_brain.y > self.game_h * 0.75:
+                    dist = abs(self.zombie_x - urgent_brain.x)
+                    reward += 0.25 * (1.0 - dist / self.window_w)
             if body_parts:
-                closest_part = min(body_parts, key=lambda it: it.y)
-                dist = abs(self.zombie_x - closest_part.x)
-                if dist <  50:
-                    reward -= 0.1 * (1.0 - (dist / self.window_w))
+                urgent_part = max(body_parts, key=lambda it: it.y)
+                if urgent_part.y > self.game_h * 0.75:
+                    dist = abs(self.zombie_x - urgent_part.x)
+                    if dist < ZOMBIE_W * 1.5:
+                        reward -= 0.35 * (1.0 - dist / (ZOMBIE_W * 1.5))
         self.items = still_falling
 
         if self.lives <= 0:
-            reward -= 50
+            reward -= 100
             terminated = True
         elif self.score >= MAX_SCORE:
-            reward += 500
+            reward += 500 + 30 * self.lives
             terminated = True
             print("Zwycięstwo! Osiągnięto limit punktów.")
 
