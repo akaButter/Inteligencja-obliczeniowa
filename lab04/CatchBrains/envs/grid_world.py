@@ -364,37 +364,37 @@ class CatchBrainsEnv(gym.Env):
                         reward += 20
                     else:
                         self.lives -= 1
-                        reward -= 30
+                        reward -= 15
                     # caught — remove from list
                 else:
                     still_falling.append(item)  # still in zone, not aligned yet
             else:
                 # passed below catch zone without being caught
                 if item.item_type == "brain":
-                    reward -= 4
+                    self.score -= 10
+                    reward -= 1
                 # bodypart miss: no penalty
         if self.items:
+            # Znajdź najbliższy mózg
             brains = [it for it in self.items if it.item_type == "brain"]
-            body_parts = [it for it in self.items if it.item_type != "brain"]
             if brains:
-                urgent_brain = max(brains, key=lambda it: it.y)
-                # strong pull only when brain is in bottom quarter — close to catch zone
-                if urgent_brain.y > self.game_h * 0.75:
-                    dist = abs(self.zombie_x - urgent_brain.x)
-                    reward += 0.25 * (1.0 - dist / self.window_w)
-            if body_parts:
-                urgent_part = max(body_parts, key=lambda it: it.y)
-                if urgent_part.y > self.game_h * 0.75:
-                    dist = abs(self.zombie_x - urgent_part.x)
-                    if dist < ZOMBIE_W * 1.5:
-                        reward -= 0.35 * (1.0 - dist / (ZOMBIE_W * 1.5))
+                closest_brain = min(brains, key=lambda it: it.y)
+                dist = abs(self.zombie_x - closest_brain.x)
+                # Mała nagroda za bycie blisko mózgu w osi X (max 0.1 na krok)
+                if dist < 100:
+                    reward += 0.1 * (1.0 - (dist / self.window_w))
+                # if dist < 50: # Jeśli jesteś prawie pod mózgiem
+                #     reward += 2.0
+                # else:
+                #     reward -= 0.1
+
         self.items = still_falling
 
         if self.lives <= 0:
-            reward -= 100
+            reward -= 50
             terminated = True
         elif self.score >= MAX_SCORE:
-            reward += 500 + 30 * self.lives
+            reward += 100 
             terminated = True
             print("Zwycięstwo! Osiągnięto limit punktów.")
 
