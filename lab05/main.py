@@ -1,14 +1,25 @@
 from __future__ import annotations
 
-import argparse
 import os
+
+os.environ.setdefault("OBJC_DISABLE_CLASS_DUPLICATE_CHECK", "YES")
+os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
+
+import argparse
 import sys
+import warnings
 from typing import Dict, List, Tuple
 
 
 SCRIPT_DIR = os.path.dirname(__file__)
 if SCRIPT_DIR not in sys.path:
     sys.path.append(SCRIPT_DIR)
+
+warnings.filterwarnings(
+    "ignore",
+    message="pkg_resources is deprecated as an API.*",
+    category=UserWarning,
+)
 
 
 # from analysis import save_json

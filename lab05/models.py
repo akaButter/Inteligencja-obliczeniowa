@@ -27,8 +27,13 @@ def build_model(
 
     algo_cls = ALGO_CLASSES[algo_name]
     kwargs = dict(params)
+    if algo_name == "TD3" and "use_sde" in kwargs:
+        kwargs.pop("use_sde")
     if policy_kwargs:
-        kwargs["policy_kwargs"] = policy_kwargs
+        policy_kwargs_clean = dict(policy_kwargs)
+        if algo_name == "TD3" and "use_sde" in policy_kwargs_clean:
+            policy_kwargs_clean.pop("use_sde")
+        kwargs["policy_kwargs"] = policy_kwargs_clean
 
     return algo_cls(
         "MlpPolicy",
