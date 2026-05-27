@@ -65,6 +65,8 @@ def run_hyperparam_sweeps(cfg: ExperimentConfig) -> Dict[str, Dict[str, Dict]]:
         curves: Dict[str, Dict] = {}
         summaries: Dict[str, Dict] = {}
 
+        print(f"[algo] {algo_name} hyperparam sweep")
+
         for hp in hyperparams[algo_name]:
             output_dir = os.path.join(algo_dir, hp.name)
             _write_params(output_dir, algo_name, hp.params, base_arch.policy_kwargs)
@@ -91,6 +93,7 @@ def run_hyperparam_sweeps(cfg: ExperimentConfig) -> Dict[str, Dict[str, Dict]]:
             title=f"{algo_name} on {cfg.env_id} (mean ± std, {cfg.n_runs} runs)",
             out_path=chart_path,
         )
+        print(f"[algo] saved curve: {chart_path}")
 
         all_summaries[algo_name] = summaries
 
@@ -104,6 +107,8 @@ def run_architecture_comparison(cfg: ExperimentConfig, algo_name: str) -> None:
     os.makedirs(compare_dir, exist_ok=True)
 
     curves: Dict[str, Dict] = {}
+
+    print(f"[arch] {algo_name} architecture comparison")
 
     for arch in architectures:
         output_dir = os.path.join(compare_dir, arch.name)
@@ -130,6 +135,7 @@ def run_architecture_comparison(cfg: ExperimentConfig, algo_name: str) -> None:
         title=f"{algo_name} architecture comparison",
         out_path=chart_path,
     )
+    print(f"[arch] saved curve: {chart_path}")
 
 
 def train_and_save_best_model(
@@ -192,6 +198,8 @@ def run_best_model_eval(cfg: ExperimentConfig, summaries: Dict[str, Dict[str, Di
     if best_algo is None or best_hp is None:
         return
 
+    print(f"[best] selected {best_algo}:{best_hp}")
+
     params = next(hp.params for hp in hyperparams[best_algo] if hp.name == best_hp)
     best_dir = os.path.join(cfg.results_dir, "best_model")
     model_path = train_and_save_best_model(
@@ -211,6 +219,7 @@ def run_best_model_eval(cfg: ExperimentConfig, summaries: Dict[str, Dict[str, Di
         seed=cfg.seed_offset,
     )
     save_json(os.path.join(best_dir, "eval.json"), eval_results)
+    print("[best] saved eval.json")
 
 
 
@@ -222,6 +231,7 @@ def run_all(cfg: ExperimentConfig) -> None:
         "algorithms": cfg.algorithms,
     }
     save_json(os.path.join(cfg.results_dir, "manifest.json"), manifest)
+    print(f"[run] results dir: {cfg.results_dir}")
 
     summaries = run_hyperparam_sweeps(cfg)
     run_architecture_comparison(cfg, algo_name="SAC")

@@ -23,6 +23,7 @@ def train_single_run(
 ) -> Dict[str, Any]:
     """Train one run and return raw episode history and timing."""
 
+    print(f"    [run] seed={seed} timesteps={total_timesteps}")
     os.makedirs(run_dir, exist_ok=True)
     monitor_path = os.path.join(run_dir, "monitor.csv")
 
@@ -63,6 +64,12 @@ def train_single_run(
 
     env.close()
 
+    print(
+        "    [done] duration={:.2f}s, time/step={:.6f}s, time/episode={:.4f}s".format(
+            duration, duration / steps_done, duration / episodes_done
+        )
+    )
+
     return {
         "timesteps": callback.episode_timesteps,
         "rewards": callback.episode_rewards,
@@ -89,6 +96,8 @@ def train_config(
     """Train multiple runs for a single hyperparam set and aggregate results."""
 
     os.makedirs(output_dir, exist_ok=True)
+
+    print(f"[config] {algo_name} -> {os.path.basename(output_dir)}")
 
     run_histories: List[Dict[str, Any]] = []
     all_rewards: List[float] = []
@@ -151,5 +160,7 @@ def train_config(
 
     save_json(os.path.join(output_dir, "summary.json"), summary)
     save_json(os.path.join(output_dir, "curve.json"), curve)
+
+    print("[config] saved summary.json and curve.json")
 
     return summary, curve, run_timings
