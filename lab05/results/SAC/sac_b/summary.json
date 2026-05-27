@@ -1,0 +1,19 @@
+{
+  "total_tracked_episodes": 928,
+  "best_reward": 290.902359,
+  "worst_reward": -782.037743,
+  "mean_reward": -66.01993677155173,
+  "std_reward": 176.3534186603724,
+  "mean_first_25%": 16.38169465517241,
+  "mean_last_25%": -85.81363157327586,
+  "improvement": -102.19532622844827,
+  "mean_length": 533.9213362068965,
+  "solved_episodes": 107,
+  "solved_pct": 11.530172413793103,
+  "algorithm": "SAC",
+  "total_timesteps_per_run": 50000,
+  "n_runs": 10,
+  "avg_total_duration_sec": 141.7898171541019,
+  "avg_time_per_timestep_sec": 0.0028357963430820383,
+  "avg_time_per_episode_sec": 1.5863622269249757
+}

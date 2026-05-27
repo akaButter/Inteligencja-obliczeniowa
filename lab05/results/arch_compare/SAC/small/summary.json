@@ -1,0 +1,9 @@
+{
+  "total_tracked_episodes": 0,
+  "algorithm": "SAC",
+  "total_timesteps_per_run": 50,
+  "n_runs": 1,
+  "avg_total_duration_sec": 0.0068424579803831875,
+  "avg_time_per_timestep_sec": 0.00013684915960766376,
+  "avg_time_per_episode_sec": 0.0068424579803831875
+}

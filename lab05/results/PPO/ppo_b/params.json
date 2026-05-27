@@ -1,0 +1,17 @@
+{
+    "algorithm": "PPO",
+    "params": {
+        "learning_rate": 0.001,
+        "gamma": 0.98,
+        "gae_lambda": 0.9,
+        "batch_size": 512,
+        "n_steps": 2048,
+        "ent_coef": 0.01
+    },
+    "policy_kwargs": {
+        "net_arch": [
+            64,
+            64
+        ]
+    }
+}
