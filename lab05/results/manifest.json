@@ -1,0 +1,10 @@
+{
+    "env_id": "LunarLanderContinuous-v3",
+    "total_timesteps": 50000,
+    "n_runs": 10,
+    "algorithms": [
+        "PPO",
+        "SAC",
+        "TD3"
+    ]
+}
