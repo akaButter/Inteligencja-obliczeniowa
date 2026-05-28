@@ -1,5 +1,5 @@
 {
-    "algorithm": "SAC",
-    "hyperparam_set": "sac_c",
-    "total_timesteps": 50000
+    "algorithm": "PPO",
+    "hyperparam_set": "ppo_a",
+    "total_timesteps": 300000
 }
