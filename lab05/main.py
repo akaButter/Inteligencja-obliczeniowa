@@ -245,7 +245,10 @@ def run_all(cfg: ExperimentConfig) -> None:
     print(f"[run] results dir: {cfg.results_dir}")
 
     summaries = run_hyperparam_sweeps(cfg)
-    run_architecture_comparison(cfg, algo_name="SAC")
+    # if "PPO" in cfg.algorithms:
+    #     run_architecture_comparison(cfg, algo_name="PPO")
+    # else:
+    #     run_architecture_comparison(cfg, algo_name="SAC")
     run_best_model_eval(cfg, summaries)
 
 
@@ -253,7 +256,7 @@ def parse_args() -> ExperimentConfig:
     parser = argparse.ArgumentParser(description="LunarLander continuous control experiments")
     parser.add_argument("--results-dir", default=DEFAULT_RESULTS_DIR)
     parser.add_argument("--env-id", default="LunarLanderContinuous-v3")
-    parser.add_argument("--timesteps", type=int, default=300_000)
+    parser.add_argument("--timesteps", type=int, default=600_000)
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--seed-offset", type=int, default=0)

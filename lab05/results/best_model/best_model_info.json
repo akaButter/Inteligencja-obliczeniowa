@@ -1,5 +1,5 @@
 {
     "algorithm": "PPO",
     "hyperparam_set": "ppo_a",
-    "total_timesteps": 300000
+    "total_timesteps": 600000
 }

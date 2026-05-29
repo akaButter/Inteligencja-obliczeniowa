@@ -1,6 +1,6 @@
 {
     "env_id": "LunarLanderContinuous-v3",
-    "total_timesteps": 300000,
+    "total_timesteps": 600000,
     "n_runs": 10,
     "algorithms": [
         "PPO"

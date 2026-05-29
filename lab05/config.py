@@ -35,7 +35,7 @@ class ExperimentConfig:
     device: str = "auto"
     seed_offset: int = 0
     curve_points: int = 500
-    algorithms: List[str] = field(default_factory=lambda: ["PPO", "SAC", "TD3"])
+    algorithms: List[str] = field(default_factory=lambda: ["PPO"])
 
 
 def default_hyperparams() -> Dict[str, List[HyperparamSet]]:

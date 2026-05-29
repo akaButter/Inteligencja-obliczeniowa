@@ -64,6 +64,10 @@ def train_single_run(
 
     env.close()
 
+    # if algo_name == "PPO":
+    model_path = os.path.join(run_dir, "model.zip")
+    model.save(model_path)
+
     print(
         "    [done] duration={:.2f}s, time/step={:.6f}s, time/episode={:.4f}s".format(
             duration, duration / steps_done, duration / episodes_done
