@@ -201,11 +201,12 @@ def train(
     vec_env = make_vec_env(n_envs=n_envs, seed=seed)
     params = dict(PPO_CONFIGS[config_name])
 
+    print(f"Trening: {config_name.upper()} | {total_timesteps:,} kroków | {n_envs} envs")
     model = MaskablePPO(
         "MlpPolicy",
         vec_env,
         tensorboard_log=os.path.join(out_dir, "tb"),
-        verbose=1,
+        verbose=0,
         seed=seed,
         **params,
     )
