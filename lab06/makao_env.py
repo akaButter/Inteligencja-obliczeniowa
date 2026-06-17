@@ -165,18 +165,18 @@ class MakaoEnv(AECEnv):
 
         if self._skip_next and action == ACTION_PASS:
             self._skip_next = False
-            reward = -0.05
+            reward = -0.1
 
         elif self._pending_draw > 0 and action == ACTION_DRAW:
             for _ in range(self._pending_draw):
                 self._draw_one(agent)
-            reward = -0.1 * self._pending_draw
+            reward = -0.3 * self._pending_draw
             self._pending_draw = 0
 
         elif action == ACTION_DRAW:
             can_play = self.action_mask()[:52].sum() > 0
             self._draw_one(agent)
-            reward = -0.3 if can_play else 0.0
+            reward = -0.8 if can_play else -0.1
 
         else:
             # Zagraj kartę
@@ -187,21 +187,33 @@ class MakaoEnv(AECEnv):
             self._requested_rank = None
             r = card_rank(card)
             s = card_suit(card)
-            reward = 0.2
 
+            hand_size = len(self._hands[agent])
+
+            # Bazowa nagroda za zagranie + bonus za bliskie wygranie
+            reward = 0.5
+            if hand_size == 0:
+                pass  # zastąpione przez terminal poniżej
+            elif hand_size <= 2:
+                reward += 1.0  # bardzo blisko wygranej
+            elif hand_size <= 4:
+                reward += 0.3
+
+            # Karty specjalne
             if r in (RANK_2, RANK_3, RANK_4, RANK_JACK, RANK_QUEEN, RANK_ACE) or (
                 r == RANK_KING and s in (SUIT_HEARTS, SUIT_SPADES)
             ):
-                reward += 0.4
+                reward += 0.8
 
             if r == RANK_2:
                 self._pending_draw += 2
-                reward += 0.15 * 2
+                reward += 0.5 * 2
             elif r == RANK_3:
                 self._pending_draw += 3
-                reward += 0.15 * 3
+                reward += 0.5 * 3
             elif r == RANK_4:
                 self._skip_next = True
+                reward += 0.5
             elif r == RANK_JACK:
                 self._requested_rank = self._best_rank_in_hand(agent)
             elif r == RANK_ACE:
@@ -209,20 +221,33 @@ class MakaoEnv(AECEnv):
             elif r == RANK_KING:
                 if s == SUIT_SPADES:
                     self._pending_draw += 5
-                    reward += 0.15 * 5
+                    reward += 0.5 * 5
                 elif s == SUIT_HEARTS:
                     prev = self._prev_agent(agent)
                     for _ in range(5):
                         self._draw_one(prev)
+                    reward += 0.5 * 5
 
             # Sprawdź wygraną
             if len(self._hands[agent]) == 0:
-                reward = 20.0
+                reward = 50.0
                 self.terminations[agent] = True
                 for other in self.agents:
                     if other != agent:
-                        self.rewards[other] = -5.0
+                        self.rewards[other] = -20.0
                         self.terminations[other] = True
+
+        # Nagroda za przewagę liczbową kart nad rywalami (ciągły sygnał)
+        if not self.terminations.get(agent, False):
+            own = len(self._hands.get(agent, set()))
+            others_avg = sum(
+                len(self._hands.get(a, set()))
+                for a in self.possible_agents if a != agent
+            ) / 3.0
+            reward += (others_avg - own) * 0.05  # > 0 gdy mamy mniej kart
+
+        # Mała kara za każdy krok (zachęca do szybkiego kończenia)
+        reward -= 0.02
 
         # Limit kroków
         if self._step_count >= MAX_STEPS:

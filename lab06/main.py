@@ -66,7 +66,7 @@ def main():
         nargs="+",
         default=None,
         choices=list(PPO_CONFIGS.keys()),
-        help="Konfiguracje do treningu (domyślnie wszystkie)",
+        help="Konfiguracje do treningu",
     )
 
     args = parser.parse_args()

@@ -22,27 +22,29 @@ from makao_env import MakaoEnv, ACTION_DRAW
 # ---------------------------------------------------------------------------
 
 PPO_CONFIGS = {
+    # Stabilny: duże rollouts, niski LR, silna eksploracja, wysoka gamma
     "ppo_a": dict(
-        learning_rate=3e-4,
+        learning_rate=2e-4,
+        n_steps=4096,
+        batch_size=512,
+        n_epochs=10,
+        gamma=0.997,       # niemal bez dyskontowania – wynik końcowy pełni wagę
+        gae_lambda=0.95,
+        ent_coef=0.05,     # aktywna eksploracja przez cały trening
+        clip_range=0.2,
+        policy_kwargs={"net_arch": [256, 256]},
+    ),
+    # Agresywny: wysoki LR, krótkie rollouts, silna entropia
+    "ppo_b": dict(
+        learning_rate=5e-4,
         n_steps=2048,
         batch_size=256,
-        n_epochs=10,
+        n_epochs=6,
         gamma=0.99,
-        gae_lambda=0.95,
-        ent_coef=0.01,
-        clip_range=0.2,
+        gae_lambda=0.92,
+        ent_coef=0.1,      # bardzo silna eksploracja na starcie
+        clip_range=0.25,
         policy_kwargs={"net_arch": [128, 128]},
-    ),
-    "ppo_b": dict(
-        learning_rate=1e-3,
-        n_steps=512,
-        batch_size=128,
-        n_epochs=4,
-        gamma=0.95,
-        gae_lambda=0.90,
-        ent_coef=0.05,
-        clip_range=0.3,
-        policy_kwargs={"net_arch": [256, 256]},
     ),
 }
 
