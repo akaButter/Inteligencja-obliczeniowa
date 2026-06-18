@@ -21,10 +21,17 @@ from makao_env import MakaoEnv, ACTION_DRAW
 # Konfiguracje hiperparametrów
 # ---------------------------------------------------------------------------
 
+def _lr_schedule(initial_lr: float):
+    """Liniowy harmonogram LR: spada od initial_lr do initial_lr/10."""
+    def func(progress_remaining: float) -> float:
+        return max(initial_lr * progress_remaining, initial_lr / 10)
+    return func
+
+
 PPO_CONFIGS = {
-    # Stabilny: duże rollouts, niski LR, silna eksploracja, wysoka gamma
+    # Stabilny: duże rollouts, rosnąca eksploracja, liniowy LR
     "ppo_a": dict(
-        learning_rate=2e-4,
+        learning_rate=_lr_schedule(3e-4),
         n_steps=4096,
         batch_size=512,
         n_epochs=10,
@@ -34,15 +41,15 @@ PPO_CONFIGS = {
         clip_range=0.2,
         policy_kwargs={"net_arch": [256, 256]},
     ),
-    # Agresywny: wysoki LR, krótkie rollouts, silna entropia
+    # Agresywny: krótkie rollouts, liniowy LR, silna entropia na starcie
     "ppo_b": dict(
-        learning_rate=5e-4,
+        learning_rate=_lr_schedule(5e-4),
         n_steps=2048,
         batch_size=256,
         n_epochs=6,
         gamma=0.99,
         gae_lambda=0.92,
-        ent_coef=0.1,      # bardzo silna eksploracja na starcie
+        ent_coef=0.1,      # silna eksploracja na starcie
         clip_range=0.25,
         policy_kwargs={"net_arch": [128, 128]},
     ),
