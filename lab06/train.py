@@ -59,13 +59,16 @@ ALGO_CONFIGS: dict[str, tuple] = {
     # TRPO: naturalna gradientowa optymalizacja z ograniczeniem KL (bez clippingu)
     # Nie wspiera natywnie masek akcji – nieprawidłowe akcje korygowane w env
     "trpo": (TRPO, False, dict(
-        learning_rate=_lr_schedule(1e-3),
-        n_steps=2048,
-        batch_size=256,
+        learning_rate=_lr_schedule(1e-3),   # tylko dla krytyka (wartości)
+        n_steps=4096,                        # duży rollout → lepsza estymata nat. gradientu
+        batch_size=128,
         gamma=0.99,
         gae_lambda=0.95,
-        target_kl=0.01,
-        n_critic_updates=10,
+        target_kl=0.01,                      # rozmiar trust region
+        n_critic_updates=20,                 # więcej aktualizacji krytyka per rollout
+        cg_max_steps=15,                     # iteracje conjugate gradient
+        cg_damping=0.1,
+        line_search_shrinking_factor=0.8,
         policy_kwargs={"net_arch": [128, 128]},
     )),
 }
@@ -222,7 +225,7 @@ def make_vec_env(n_envs: int = 4, seed: int = 42, use_mask: bool = True):
 
 def train(
     config_name: str,
-    total_timesteps: int = 1_000_000,
+    total_timesteps: int = 500_000,
     n_envs: int = 4,
     seed: int = 42,
     results_dir: str = "results",

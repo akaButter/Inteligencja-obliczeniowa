@@ -14,7 +14,7 @@ from plot import generate_all_plots
 
 
 def train_all(
-    timesteps: int = 1_000_000,
+    timesteps: int = 500_000,
     n_envs: int = 4,
     seed: int = 42,
     results_dir: str = "results",
@@ -56,7 +56,7 @@ def main():
         default="all",
         help="Tryb: train | eval | plot | all",
     )
-    parser.add_argument("--timesteps", type=int, default=1_000_000, help="Liczba kroków treningu")
+    parser.add_argument("--timesteps", type=int, default=500_000, help="Liczba kroków treningu")
     parser.add_argument("--n-envs", type=int, default=4, help="Liczba równoległych środowisk")
     parser.add_argument("--seed", type=int, default=42, help="Ziarno losowości")
     parser.add_argument("--eval-episodes", type=int, default=200, help="Liczba epizodów ewaluacji")

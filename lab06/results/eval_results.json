@@ -1,113 +1,170 @@
 {
-  "random_baseline": {
+  "baseline_random": {
     "wins": {
-      "player_0": 59,
+      "player_0": 50,
       "player_1": 49,
-      "player_2": 46,
-      "player_3": 46
+      "player_2": 57,
+      "player_3": 44
     },
     "win_rates": {
-      "player_0": 0.295,
+      "player_0": 0.25,
       "player_1": 0.245,
-      "player_2": 0.23,
-      "player_3": 0.23
+      "player_2": 0.285,
+      "player_3": 0.22
     },
     "timeouts": 0
   },
-  "ppo_a_all_ppo": {
+  "ppo_a_jednorodny": {
     "wins": {
-      "player_0": 63,
+      "player_0": 60,
+      "player_1": 47,
+      "player_2": 43,
+      "player_3": 50
+    },
+    "win_rates": {
+      "player_0": 0.3,
+      "player_1": 0.235,
+      "player_2": 0.215,
+      "player_3": 0.25
+    },
+    "timeouts": 0
+  },
+  "ppo_a_vs_random": {
+    "wins": {
+      "player_0": 65,
       "player_1": 46,
-      "player_2": 54,
-      "player_3": 35
+      "player_2": 45,
+      "player_3": 44
     },
     "win_rates": {
-      "player_0": 0.315,
+      "player_0": 0.325,
       "player_1": 0.23,
-      "player_2": 0.27,
-      "player_3": 0.175
+      "player_2": 0.225,
+      "player_3": 0.22
     },
-    "timeouts": 2
+    "timeouts": 0,
+    "model_win_rate": 0.555,
+    "random_win_rate": 0.445
   },
-  "ppo_a_mixed": {
+  "ppo_b_jednorodny": {
     "wins": {
-      "player_0": 48,
-      "player_1": 60,
+      "player_0": 52,
+      "player_1": 48,
       "player_2": 50,
-      "player_3": 42
+      "player_3": 49
     },
     "win_rates": {
-      "player_0": 0.24,
-      "player_1": 0.3,
+      "player_0": 0.26,
+      "player_1": 0.24,
       "player_2": 0.25,
-      "player_3": 0.21
+      "player_3": 0.245
     },
-    "ppo_win_rate": 0.54,
-    "random_win_rate": 0.46,
-    "timeouts": 0
-  },
-  "ppo_b_all_ppo": {
-    "wins": {
-      "player_0": 54,
-      "player_1": 55,
-      "player_2": 37,
-      "player_3": 47
-    },
-    "win_rates": {
-      "player_0": 0.27,
-      "player_1": 0.275,
-      "player_2": 0.185,
-      "player_3": 0.235
-    },
-    "timeouts": 7
-  },
-  "ppo_b_mixed": {
-    "wins": {
-      "player_0": 67,
-      "player_1": 56,
-      "player_2": 38,
-      "player_3": 38
-    },
-    "win_rates": {
-      "player_0": 0.335,
-      "player_1": 0.28,
-      "player_2": 0.19,
-      "player_3": 0.19
-    },
-    "ppo_win_rate": 0.615,
-    "random_win_rate": 0.38,
     "timeouts": 1
   },
-  "trpo_all_ppo": {
+  "ppo_b_vs_random": {
+    "wins": {
+      "player_0": 57,
+      "player_1": 59,
+      "player_2": 39,
+      "player_3": 45
+    },
+    "win_rates": {
+      "player_0": 0.285,
+      "player_1": 0.295,
+      "player_2": 0.195,
+      "player_3": 0.225
+    },
+    "timeouts": 0,
+    "model_win_rate": 0.58,
+    "random_win_rate": 0.42
+  },
+  "trpo_jednorodny": {
     "wins": {
       "player_0": 22,
-      "player_1": 13,
-      "player_2": 18,
-      "player_3": 16
+      "player_1": 17,
+      "player_2": 16,
+      "player_3": 12
     },
     "win_rates": {
       "player_0": 0.11,
-      "player_1": 0.065,
-      "player_2": 0.09,
-      "player_3": 0.08
+      "player_1": 0.085,
+      "player_2": 0.08,
+      "player_3": 0.06
     },
-    "timeouts": 131
+    "timeouts": 133
   },
-  "trpo_mixed": {
+  "trpo_vs_random": {
     "wins": {
-      "player_0": 10,
-      "player_1": 7,
-      "player_2": 88,
-      "player_3": 91
+      "player_0": 12,
+      "player_1": 9,
+      "player_2": 96,
+      "player_3": 76
     },
     "win_rates": {
-      "player_0": 0.05,
-      "player_1": 0.035,
-      "player_2": 0.44,
-      "player_3": 0.455
+      "player_0": 0.06,
+      "player_1": 0.045,
+      "player_2": 0.48,
+      "player_3": 0.38
     },
-    "ppo_win_rate": 0.085,
-    "random_win_rate": 0.895,
-    "timeouts": 4
+    "timeouts": 7,
+    "model_win_rate": 0.105,
+    "random_win_rate": 0.86
+  },
+  "ppo_a_vs_ppo_b": {
+    "wins": {
+      "player_0": 54,
+      "player_1": 49,
+      "player_2": 52,
+      "player_3": 45
+    },
+    "win_rates": {
+      "player_0": 0.27,
+      "player_1": 0.245,
+      "player_2": 0.26,
+      "player_3": 0.225
+    },
+    "timeouts": 0,
+    "team_a_win_rate": 0.515,
+    "team_b_win_rate": 0.485,
+    "config_a": "ppo_a",
+    "config_b": "ppo_b"
+  },
+  "ppo_a_vs_trpo": {
+    "wins": {
+      "player_0": 104,
+      "player_1": 77,
+      "player_2": 4,
+      "player_3": 11
+    },
+    "win_rates": {
+      "player_0": 0.52,
+      "player_1": 0.385,
+      "player_2": 0.02,
+      "player_3": 0.055
+    },
+    "timeouts": 4,
+    "team_a_win_rate": 0.905,
+    "team_b_win_rate": 0.075,
+    "config_a": "ppo_a",
+    "config_b": "trpo"
+  },
+  "ppo_b_vs_trpo": {
+    "wins": {
+      "player_0": 109,
+      "player_1": 76,
+      "player_2": 4,
+      "player_3": 3
+    },
+    "win_rates": {
+      "player_0": 0.545,
+      "player_1": 0.38,
+      "player_2": 0.02,
+      "player_3": 0.015
+    },
+    "timeouts": 8,
+    "team_a_win_rate": 0.925,
+    "team_b_win_rate": 0.035,
+    "config_a": "ppo_b",
+    "config_b": "trpo"
   }
 }
