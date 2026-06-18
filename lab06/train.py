@@ -1,4 +1,4 @@
-"""Trening MaskablePPO na środowisku Makao.
+"""Trening MaskablePPO i TRPO na środowisku Makao.
 
 Strategia: jeden agent (player_0) uczy się przez RL; pozostali grają losowo.
 Po treningu ten sam model używany jest przez wszystkich agentów w ewaluacji
@@ -12,7 +12,7 @@ from gymnasium.spaces import Discrete, Box
 from stable_baselines3.common.env_util import make_vec_env as sb3_make_vec_env
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.vec_env import VecMonitor
-from sb3_contrib import MaskablePPO
+from sb3_contrib import MaskablePPO, TRPO
 from sb3_contrib.common.wrappers import ActionMasker
 
 from makao_env import MakaoEnv, ACTION_DRAW
@@ -28,31 +28,46 @@ def _lr_schedule(initial_lr: float):
     return func
 
 
-PPO_CONFIGS = {
-    # Stabilny: duże rollouts, rosnąca eksploracja, liniowy LR
-    "ppo_a": dict(
+# Mapowanie: nazwa → (klasa algorytmu, użyj_maski, hiperparametry)
+# use_mask=True: środowisko owinięte ActionMasker (tylko dla MaskablePPO)
+# use_mask=False: TRPO uczy się bez masek; nieprawidłowe akcje są korygowane w env
+ALGO_CONFIGS: dict[str, tuple] = {
+    # PPO stabilny: duże rollouts, liniowy LR, wysoka gamma
+    "ppo_a": (MaskablePPO, True, dict(
         learning_rate=_lr_schedule(3e-4),
         n_steps=4096,
         batch_size=512,
         n_epochs=10,
-        gamma=0.997,       # niemal bez dyskontowania – wynik końcowy pełni wagę
+        gamma=0.997,
         gae_lambda=0.95,
-        ent_coef=0.05,     # aktywna eksploracja przez cały trening
+        ent_coef=0.05,
         clip_range=0.2,
         policy_kwargs={"net_arch": [256, 256]},
-    ),
-    # Agresywny: krótkie rollouts, liniowy LR, silna entropia na starcie
-    "ppo_b": dict(
+    )),
+    # PPO agresywny: krótkie rollouts, silna entropia
+    "ppo_b": (MaskablePPO, True, dict(
         learning_rate=_lr_schedule(5e-4),
         n_steps=2048,
         batch_size=256,
         n_epochs=6,
         gamma=0.99,
         gae_lambda=0.92,
-        ent_coef=0.1,      # silna eksploracja na starcie
+        ent_coef=0.1,
         clip_range=0.25,
         policy_kwargs={"net_arch": [128, 128]},
-    ),
+    )),
+    # TRPO: naturalna gradientowa optymalizacja z ograniczeniem KL (bez clippingu)
+    # Nie wspiera natywnie masek akcji – nieprawidłowe akcje korygowane w env
+    "trpo": (TRPO, False, dict(
+        learning_rate=_lr_schedule(1e-3),
+        n_steps=2048,
+        batch_size=256,
+        gamma=0.99,
+        gae_lambda=0.95,
+        target_kl=0.01,
+        n_critic_updates=10,
+        policy_kwargs={"net_arch": [128, 128]},
+    )),
 }
 
 
@@ -90,8 +105,14 @@ class MakaoSingleAgentEnv(gym.Env):
         terminated = False
         truncated = False
 
+        # Koryguj nieprawidłowe akcje (dla TRPO który nie używa masek)
+        action = int(action)
+        if not self._current_mask[action]:
+            valid = np.where(self._current_mask)[0]
+            action = int(np.random.choice(valid)) if len(valid) > 0 else ACTION_DRAW
+
         # Wykonaj akcję naszego agenta
-        self._aec.step(int(action))
+        self._aec.step(action)
         step_reward += self._aec.rewards.get(self._agent_id, 0.0)
         terminated = self._aec.terminations.get(self._agent_id, False)
         truncated = self._aec.truncations.get(self._agent_id, False)
@@ -177,15 +198,20 @@ class EpisodeRewardCallback(BaseCallback):
 # Tworzenie VecEnv
 # ---------------------------------------------------------------------------
 
-def _make_env():
+def _make_env_masked():
     env = MakaoSingleAgentEnv()
     env = ActionMasker(env, lambda e: e.get_action_mask())
     return env
 
 
-def make_vec_env(n_envs: int = 4, seed: int = 42):
-    """Tworzy VecEnv dla MaskablePPO (n_envs równoległych środowisk)."""
-    vec_env = sb3_make_vec_env(_make_env, n_envs=n_envs, seed=seed)
+def _make_env_unmasked():
+    return MakaoSingleAgentEnv()
+
+
+def make_vec_env(n_envs: int = 4, seed: int = 42, use_mask: bool = True):
+    """Tworzy VecEnv (n_envs równoległych środowisk). use_mask=True dla MaskablePPO."""
+    fn = _make_env_masked if use_mask else _make_env_unmasked
+    vec_env = sb3_make_vec_env(fn, n_envs=n_envs, seed=seed)
     vec_env = VecMonitor(vec_env)
     return vec_env
 
@@ -205,11 +231,11 @@ def train(
     out_dir = os.path.join(results_dir, config_name)
     os.makedirs(out_dir, exist_ok=True)
 
-    vec_env = make_vec_env(n_envs=n_envs, seed=seed)
-    params = dict(PPO_CONFIGS[config_name])
+    AlgoClass, use_mask, params = ALGO_CONFIGS[config_name]
+    vec_env = make_vec_env(n_envs=n_envs, seed=seed, use_mask=use_mask)
 
     print(f"Trening: {config_name.upper()} | {total_timesteps:,} kroków | {n_envs} envs")
-    model = MaskablePPO(
+    model = AlgoClass(
         "MlpPolicy",
         vec_env,
         tensorboard_log=os.path.join(out_dir, "tb"),

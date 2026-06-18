@@ -35,7 +35,7 @@ def plot_learning_curves(
 ):
     """Krzywe uczenia (nagroda epizodowa vs kroki) dla podanych konfiguracji."""
     fig, ax = plt.subplots(figsize=(10, 5))
-    colors = {"ppo_a": "#2196F3", "ppo_b": "#FF5722"}
+    colors = {"ppo_a": "#2196F3", "ppo_b": "#FF5722", "trpo": "#4CAF50"}
 
     for config in configs:
         csv_path = os.path.join(results_dir, config, "learning_curve.csv")
@@ -50,7 +50,7 @@ def plot_learning_curves(
 
     ax.set_xlabel("Kroki (timesteps)")
     ax.set_ylabel("Nagroda epizodowa")
-    ax.set_title("Krzywe uczenia – PPO_A vs PPO_B")
+    ax.set_title("Krzywe uczenia – PPO_A vs PPO_B vs TRPO")
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -69,7 +69,7 @@ def plot_win_rates(
     out_path: str | None = None,
 ):
     """Wykres słupkowy win rate: jednorodny vs mieszany."""
-    configs = [c for c in ("ppo_a", "ppo_b") if f"{c}_all_ppo" in eval_results]
+    configs = [c for c in ("ppo_a", "ppo_b", "trpo") if f"{c}_all_ppo" in eval_results]
     if not configs:
         print("Brak wyników do wykresu win rate.")
         return
@@ -86,10 +86,18 @@ def plot_win_rates(
 
     x = np.arange(len(labels))
     width = 0.3
+    bar_colors = {"PPO_A": "#2196F3", "PPO_B": "#FF5722", "TRPO": "#4CAF50"}
 
-    fig, ax = plt.subplots(figsize=(8, 5))
-    bars1 = ax.bar(x - width / 2, all_ppo_rates, width, label="Jednorodny (PPO vs PPO)", color="#2196F3")
-    bars2 = ax.bar(x + width / 2, mixed_ppo_rates, width, label="Mieszany (PPO vs losowy)", color="#FF5722")
+    fig, ax = plt.subplots(figsize=(9, 5))
+    bars1 = ax.bar(
+        x - width / 2, all_ppo_rates, width,
+        label="Jednorodny (wszyscy model)", color=[bar_colors.get(l, "#888") for l in labels]
+    )
+    bars2 = ax.bar(
+        x + width / 2, mixed_ppo_rates, width,
+        label="Mieszany (model vs losowy)", color=[bar_colors.get(l, "#888") for l in labels],
+        alpha=0.6
+    )
 
     # Baseline losowy – 25% dla 4 graczy
     ax.axhline(0.25, color="gray", linestyle="--", label="Baseline losowy (25%)")
@@ -118,7 +126,7 @@ def plot_win_rates(
 
 def generate_all_plots(results_dir: str = "results"):
     """Generuje wszystkie wykresy na podstawie zapisanych wyników."""
-    plot_learning_curves(["ppo_a", "ppo_b"], results_dir)
+    plot_learning_curves(["ppo_a", "ppo_b", "trpo"], results_dir)
 
     eval_path = os.path.join(results_dir, "eval_results.json")
     if os.path.exists(eval_path):

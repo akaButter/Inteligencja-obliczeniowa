@@ -8,7 +8,7 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _dir)
 os.chdir(_dir)
 
-from train import train, PPO_CONFIGS
+from train import train, ALGO_CONFIGS
 from evaluate import run_all_evaluations
 from plot import generate_all_plots
 
@@ -22,7 +22,7 @@ def train_all(
 ):
     """Trenuje wszystkie konfiguracje PPO (domyślnie ppo_a i ppo_b)."""
     if configs is None:
-        configs = list(PPO_CONFIGS.keys())
+        configs = list(ALGO_CONFIGS.keys())
     for config in configs:
         print(f"\n{'='*50}")
         print(f"Trening: {config} | {timesteps} kroków | {n_envs} środowisk")
@@ -65,7 +65,7 @@ def main():
         "--configs",
         nargs="+",
         default=None,
-        choices=list(PPO_CONFIGS.keys()),
+        choices=list(ALGO_CONFIGS.keys()),
         help="Konfiguracje do treningu",
     )
 

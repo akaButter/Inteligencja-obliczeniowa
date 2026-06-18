@@ -3,9 +3,28 @@ import json
 import os
 import numpy as np
 from pettingzoo.utils import wrappers
-from sb3_contrib import MaskablePPO
+from sb3_contrib import MaskablePPO, TRPO
 
-from makao_env import MakaoEnv
+from makao_env import MakaoEnv, ACTION_DRAW
+
+
+def _load_model(config_name: str, model_path: str):
+    """Ładuje model właściwej klasy; zwraca (model, is_maskable)."""
+    if config_name == "trpo":
+        return TRPO.load(model_path), False
+    return MaskablePPO.load(model_path), True
+
+
+def _predict(model, obs: np.ndarray, mask: np.ndarray, is_maskable: bool) -> int:
+    """Przewiduje akcję; dla TRPO koryguje nieprawidłowy wybór na losowo ważny."""
+    if is_maskable:
+        action, _ = model.predict(obs, action_masks=mask, deterministic=True)
+    else:
+        action, _ = model.predict(obs, deterministic=True)
+        if not mask[int(action)]:
+            valid = np.where(mask)[0]
+            action = int(np.random.choice(valid)) if len(valid) > 0 else ACTION_DRAW
+    return int(action)
 
 
 def _make_eval_env():
@@ -32,9 +51,9 @@ def _find_winner(env) -> str | None:
     return None
 
 
-def evaluate_all_ppo(model_path: str, n_episodes: int = 200) -> dict:
-    """Scenariusz jednorodny: wszyscy 4 agenci używają tego samego modelu PPO."""
-    model = MaskablePPO.load(model_path)
+def evaluate_all_ppo(model_path: str, n_episodes: int = 200, config_name: str = "ppo_a") -> dict:
+    """Scenariusz jednorodny: wszyscy 4 agenci używają tego samego modelu."""
+    model, is_maskable = _load_model(config_name, model_path)
     env = _make_eval_env()
     wins = {a: 0 for a in env.unwrapped.possible_agents}
     timeouts = 0
@@ -47,8 +66,8 @@ def evaluate_all_ppo(model_path: str, n_episodes: int = 200) -> dict:
                 env.step(None)
                 continue
             mask = env.unwrapped.action_mask()
-            action, _ = model.predict(obs, action_masks=mask, deterministic=True)
-            env.step(int(action))
+            action = _predict(model, obs, mask, is_maskable)
+            env.step(action)
 
         winner = _find_winner(env)
         if winner:
@@ -65,15 +84,16 @@ def evaluate_mixed(
     model_path: str,
     ppo_agents: list[str] | None = None,
     n_episodes: int = 200,
+    config_name: str = "ppo_a",
 ) -> dict:
-    """Scenariusz mieszany: część agentów gra PPO, reszta losowo.
+    """Scenariusz mieszany: część agentów gra wytrenowaną polityką, reszta losowo.
 
-    Domyślnie player_0 i player_1 używają PPO, player_2 i player_3 grają losowo.
+    Domyślnie player_0 i player_1 używają modelu, player_2 i player_3 grają losowo.
     """
     if ppo_agents is None:
         ppo_agents = ["player_0", "player_1"]
 
-    model = MaskablePPO.load(model_path)
+    model, is_maskable = _load_model(config_name, model_path)
     env = _make_eval_env()
     wins = {a: 0 for a in env.unwrapped.possible_agents}
     timeouts = 0
@@ -87,8 +107,7 @@ def evaluate_mixed(
                 continue
             mask = env.unwrapped.action_mask()
             if agent in ppo_agents:
-                action, _ = model.predict(obs, action_masks=mask, deterministic=True)
-                action = int(action)
+                action = _predict(model, obs, mask, is_maskable)
             else:
                 action = _random_action(mask)
             env.step(action)
@@ -144,23 +163,23 @@ def run_all_evaluations(
     results_dir: str = "results",
     n_episodes: int = 200,
 ) -> dict:
-    """Uruchamia pełną ewaluację dla ppo_a, ppo_b i baseline losowego."""
+    """Uruchamia pełną ewaluację dla ppo_a, ppo_b, a2c i baseline losowego."""
     all_results = {}
 
     print("Ewaluacja baseline losowego...")
     all_results["random_baseline"] = evaluate_random_baseline(n_episodes)
 
-    for config in ("ppo_a", "ppo_b"):
+    for config in ("ppo_a", "ppo_b", "trpo"):
         model_path = os.path.join(results_dir, config, "model.zip")
         if not os.path.exists(model_path):
             print(f"Brak modelu {model_path}, pomijam.")
             continue
 
         print(f"Ewaluacja {config} – scenariusz jednorodny...")
-        all_results[f"{config}_all_ppo"] = evaluate_all_ppo(model_path, n_episodes)
+        all_results[f"{config}_all_ppo"] = evaluate_all_ppo(model_path, n_episodes, config_name=config)
 
-        print(f"Ewaluacja {config} – scenariusz mieszany (2 PPO vs 2 losowych)...")
-        all_results[f"{config}_mixed"] = evaluate_mixed(model_path, n_episodes=n_episodes)
+        print(f"Ewaluacja {config} – scenariusz mieszany (2 modele vs 2 losowych)...")
+        all_results[f"{config}_mixed"] = evaluate_mixed(model_path, n_episodes=n_episodes, config_name=config)
 
     out_path = os.path.join(results_dir, "eval_results.json")
     os.makedirs(results_dir, exist_ok=True)
