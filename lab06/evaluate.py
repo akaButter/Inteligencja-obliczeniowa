@@ -1,4 +1,3 @@
-"""Ewaluacja wytrenowanych modeli: jednorodny, vs losowy, model vs model."""
 import json
 import os
 import numpy as np
@@ -17,7 +16,6 @@ def _make_eval_env():
 
 
 def _random_action(mask: np.ndarray) -> int:
-    """Zachłanny losowy: zagraj kartę jeśli możliwe, dobierz gdy musisz."""
     play_valid = np.where(mask[:52])[0]
     if len(play_valid) > 0:
         return int(np.random.choice(play_valid))
@@ -33,14 +31,12 @@ def _find_winner(env) -> str | None:
 
 
 def _load_model(config_name: str, model_path: str):
-    """Ładuje model właściwej klasy; zwraca (model, is_maskable)."""
     if config_name == "trpo":
         return TRPO.load(model_path), False
     return MaskablePPO.load(model_path), True
 
 
 def _predict(model, obs: np.ndarray, mask: np.ndarray, is_maskable: bool) -> int:
-    """Przewiduje akcję; dla TRPO koryguje ewentualnie nieprawidłowy wybór."""
     if is_maskable:
         action, _ = model.predict(obs, action_masks=mask, deterministic=True)
     else:
@@ -52,11 +48,6 @@ def _predict(model, obs: np.ndarray, mask: np.ndarray, is_maskable: bool) -> int
 
 
 def _run_episodes(agent_models: dict, n_episodes: int) -> dict:
-    """Generyczna pętla ewaluacji.
-
-    agent_models: {agent_id: (model, is_maskable) | None}
-    None oznacza zachłannego losowego gracza.
-    """
     env = _make_eval_env()
     wins = {a: 0 for a in POSSIBLE_AGENTS}
     timeouts = 0
@@ -87,17 +78,11 @@ def _run_episodes(agent_models: dict, n_episodes: int) -> dict:
     return {"wins": wins, "win_rates": win_rates, "timeouts": timeouts}
 
 
-# ---------------------------------------------------------------------------
-# Scenariusze ewaluacji
-# ---------------------------------------------------------------------------
-
 def evaluate_random_baseline(n_episodes: int = 200) -> dict:
-    """Baseline: wszyscy agenci grają losowo."""
     return _run_episodes({a: None for a in POSSIBLE_AGENTS}, n_episodes)
 
 
 def evaluate_uniform(model_path: str, config_name: str, n_episodes: int = 200) -> dict:
-    """Jednorodny: wszyscy 4 agenci używają tego samego modelu (parametr sharing)."""
     entry = _load_model(config_name, model_path)
     return _run_episodes({a: entry for a in POSSIBLE_AGENTS}, n_episodes)
 
@@ -105,7 +90,6 @@ def evaluate_uniform(model_path: str, config_name: str, n_episodes: int = 200) -
 def evaluate_vs_random(
     model_path: str, config_name: str, n_episodes: int = 200
 ) -> dict:
-    """Model vs losowy: player_0+1 używają modelu, player_2+3 grają losowo."""
     entry = _load_model(config_name, model_path)
     result = _run_episodes(
         {"player_0": entry, "player_1": entry, "player_2": None, "player_3": None},
@@ -123,7 +107,6 @@ def evaluate_model_vs_model(
     path_b: str, config_b: str,
     n_episodes: int = 200,
 ) -> dict:
-    """Model vs Model: player_0+1 używają algo A, player_2+3 używają algo B."""
     entry_a = _load_model(config_a, path_a)
     entry_b = _load_model(config_b, path_b)
     result = _run_episodes(
@@ -144,7 +127,6 @@ def run_all_evaluations(
     results_dir: str = "results",
     n_episodes: int = 200,
 ) -> dict:
-    """Pełna ewaluacja: baseline, jednorodny, vs losowy, model vs model."""
     all_results = {}
     configs = ("ppo_a", "ppo_b", "trpo")
 
@@ -166,7 +148,6 @@ def run_all_evaluations(
         print(f"[{config.upper()}] Model vs losowy...")
         all_results[f"{config}_vs_random"] = evaluate_vs_random(path, config, n_episodes)
 
-    # Pairwise model vs model
     avail_list = list(available.items())
     for i, (c1, p1) in enumerate(avail_list):
         for c2, p2 in avail_list[i + 1:]:

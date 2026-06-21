@@ -1,9 +1,7 @@
-"""Punkt wejścia: trening, ewaluacja i generowanie wykresów dla gry Makao."""
 import argparse
 import sys
 import os
 
-# Zapewnia działanie importów niezależnie od CWD
 _dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _dir)
 os.chdir(_dir)
@@ -20,7 +18,6 @@ def train_all(
     results_dir: str = "results",
     configs: list[str] | None = None,
 ):
-    """Trenuje wszystkie konfiguracje PPO (domyślnie ppo_a i ppo_b)."""
     if configs is None:
         configs = list(ALGO_CONFIGS.keys())
     for config in configs:
@@ -37,13 +34,11 @@ def train_all(
 
 
 def evaluate_all(results_dir: str = "results", n_episodes: int = 200):
-    """Uruchamia ewaluację wszystkich wytrenowanych modeli."""
     print(f"\nEwaluacja: {n_episodes} epizodów na konfigurację")
     return run_all_evaluations(results_dir=results_dir, n_episodes=n_episodes)
 
 
 def plot_results(results_dir: str = "results"):
-    """Generuje wszystkie wykresy z zapisanych wyników."""
     print("\nGenerowanie wykresów")
     generate_all_plots(results_dir=results_dir)
 

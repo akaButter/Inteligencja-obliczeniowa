@@ -1,4 +1,3 @@
-"""Generowanie wykresów: krzywe uczenia, win rate, model vs model."""
 import os
 import csv
 import json
@@ -35,7 +34,6 @@ def plot_learning_curves(
     out_path: str | None = None,
     window: int = 100,
 ):
-    """Krzywe uczenia (nagroda epizodowa vs kroki) dla podanych konfiguracji."""
     fig, ax = plt.subplots(figsize=(10, 5))
 
     for config in configs:
@@ -70,7 +68,6 @@ def plot_win_rates(
     results_dir: str = "results",
     out_path: str | None = None,
 ):
-    """Wykres słupkowy: jednorodny vs model_vs_losowy vs baseline dla każdego algo."""
     configs = [c for c in ("ppo_a", "ppo_b", "trpo") if f"{c}_jednorodny" in eval_results]
     if not configs:
         print("Brak wyników do wykresu win rate.")
@@ -126,7 +123,6 @@ def plot_model_vs_model(
     results_dir: str = "results",
     out_path: str | None = None,
 ):
-    """Wykres head-to-head: wyniki konfrontacji model vs model."""
     matchups = [(k, v) for k, v in eval_results.items() if "team_a_win_rate" in v]
     if not matchups:
         print("Brak wyników model vs model.")
@@ -171,7 +167,6 @@ def plot_model_vs_model(
 
 
 def generate_all_plots(results_dir: str = "results"):
-    """Generuje wszystkie wykresy na podstawie zapisanych wyników."""
     plot_learning_curves(["ppo_a", "ppo_b", "trpo"], results_dir)
 
     eval_path = os.path.join(results_dir, "eval_results.json")
